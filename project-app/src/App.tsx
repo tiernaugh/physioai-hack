@@ -26,9 +26,11 @@ import {
   Target,
   TrendingUp,
   UserRound,
+  ClipboardList,
   X,
 } from "lucide-react";
 import BodyViewer from "./BodyViewer";
+import AssessmentStory from "./AssessmentStory";
 import VoiceInbox from "./VoiceInbox";
 import {
   exercises,
@@ -41,7 +43,7 @@ import {
   type Session,
 } from "./data";
 
-type Page = "overview" | "routine" | "history" | "profile" | "voice";
+type Page = "overview" | "assessment" | "routine" | "history" | "profile" | "voice";
 type Message = { role: "assistant" | "user"; text: string };
 function Modal({
   title,
@@ -129,6 +131,7 @@ export default function App() {
   const totalSets = exercises.reduce((a, b) => a + b.sets, 0);
   const nav = [
     { id: "overview", label: "Overview", icon: LayoutGrid },
+    { id: "assessment", label: "Assessment story", icon: ClipboardList },
     { id: "routine", label: "My routine", icon: Dumbbell },
     { id: "history", label: "Session history", icon: History },
     { id: "voice", label: "WhatsApp notes", icon: Mic },
@@ -387,6 +390,8 @@ export default function App() {
               <div className="eyebrow">
                 {page === "overview"
                   ? "A LITTLE PROGRESS, EVERY DAY"
+                  : page === "assessment"
+                    ? "REAL CASE · DE-IDENTIFIED"
                   : "YOUR PERSONAL WORKSPACE"}
               </div>
               <h1>
@@ -394,6 +399,8 @@ export default function App() {
                   <>
                     Let’s keep you moving<span>.</span>
                   </>
+                ) : page === "assessment" ? (
+                  "Your assessment, made visible."
                 ) : page === "routine" ? (
                   "Your movement routine."
                 ) : page === "history" ? (
@@ -407,6 +414,8 @@ export default function App() {
               <p>
                 {page === "overview"
                   ? "Welcome back, Alex. Make a little time for yourself today."
+                  : page === "assessment"
+                    ? "A separate story built from the supplied September 2026 strength and mobility report."
                   : page === "routine"
                     ? "Hamstring recovery · a fictional programme for this demo."
                     : page === "history"
@@ -425,6 +434,7 @@ export default function App() {
           </div>
 
           {page === "voice" && <VoiceInbox />}
+          {page === "assessment" && <AssessmentStory />}
           {page === "overview" && (
             <>
               <div className="metrics">

@@ -5,12 +5,22 @@ Working repository for the **Agents, Everywhere: Bots, Channels, & More** global
 The repository is split into two areas:
 
 - [`project-documents/`](project-documents/README.md) contains the brief, source material, ideation, concept definition, decisions, requirements, and pitch preparation.
-- [`project-app/`](project-app/README.md) will contain the product implementation once the concept and technical approach are chosen.
+- [`project-app/`](project-app/README.md) contains the running Vite/React prototype, assessment story, packaged anatomy and optional WhatsApp backend.
 
 Agent instructions live in `AGENTS.md`. The accompanying `CLAUDE.md` files allow Claude Code to load the same instructions.
 
 ## Current direction
 
-A client-facing body record that connects assessment findings, coach updates and client observations to relevant regions. The demo starts with an existing record, receives a simulated coach-note delivery, maps it through the agent, and lets the client explore and add an observation in place.
+A client-facing body record that connects assessment findings, coach updates and client observations to relevant regions. The planned consultation flow is: record a coach explanation → extract sourced proposals → coach reviews and confirms → client explores updates and adds an observation.
 
-Start with the [concept](project-documents/concept/README.md), [demo script](project-documents/concept/08-demo-story.md) and [ticket plan](project-documents/tickets/plan.md). Concept selection is complete; contextual validation and the viewer integration spike are next. No application has been implemented.
+Kingsley's existing prototype and Tiernan's consultation handoff are combined in this repository. The prototype already contains a fictional hamstring recovery/routine experience and a separate report-backed assessment story. Golf mockup source and images are retained but are not connected to navigation. These features remain available as exploratory work; the new consultation flow and Next.js/CopilotKit migration still require implementation and verification.
+
+Run the existing app from the repository root:
+
+```sh
+cd project-app
+npm install
+npm run dev
+```
+
+Start with the [combined implementation status](project-documents/handoff/integration-status.md), [product brief](project-documents/handoff/prd.md), [demo script](project-documents/concept/08-demo-story.md) and [ticket plan](project-documents/tickets/plan.md).

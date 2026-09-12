@@ -54,6 +54,8 @@ Exercise planning/logging, golf technique analysis, body or recovery scores, tis
 
 Recovery and performance are contextual stories, not additional implemented flows.
 
+These exclusions apply to delivery of the consultation P0. Existing prototype recovery/routine features, the assessment story, optional WhatsApp integration and golf mockup source are retained in the combined repository; their presence does not satisfy or expand PR-01 through PR-14. See [combined implementation status](integration-status.md).
+
 ## Definition of done
 PR-01 through PR-14 pass on the selected demo device. Demonstrate one real recording-to-confirmed-update cycle and one client observation surviving reload. Run twice, record actual latency and disclose all seeded elements. A transcript fallback is useful but does not count as proving PR-04.
 

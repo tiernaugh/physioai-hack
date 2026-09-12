@@ -1,5 +1,14 @@
 # Decisions Log
 
+## 2026-09-12 — Add the supplied assessment as a separate story
+
+- **Status:** Decided
+- **Decision:** Keep the existing six-month fictional hamstring experience unchanged and add a separate Assessment story based on the de-identified Studio 22 report.
+- **Reason:** The user asked for a second story rather than a replacement. This preserves the original demo while showing how a real report can become a clear, explorable narrative.
+- **Evidence boundary:** The report supports the strength readings, ankle-range limitation, four-week rehabilitation priority, progressive loading and retest. It does not specify ankle laterality, diagnose an injured muscle, or prescribe named exercises and doses. The new story therefore labels musculature as associated reference anatomy and all named movements as examples for professional discussion.
+- **Experience:** Move from baseline to week four, inspect the full measured-strength table, see ankle-related musculature and connect each phase to a clearly labelled exercise example.
+- **Owner:** Team
+
 Status: Draft
 
 Record decisions that materially affect product scope, interaction design, architecture, or the demo. Do not use this file for routine implementation details.
@@ -16,6 +25,14 @@ Record decisions that materially affect product scope, interaction design, archi
 - **Owner:** Person responsible for following through.
 
 ## Current decisions
+
+### 2026-09-12 — Combine prototype work and consultation handoff
+
+- **Status:** Decided
+- **Decision:** Preserve Kingsley's existing application and local assessment/golf work alongside Tiernan's recorded-session brief, with an explicit implementation-status map in `handoff/integration-status.md`.
+- **Reason:** The user requested merging and combining the two contributions after reviewing the incoming documentation changes.
+- **Consequences:** Existing prototype features remain in the repository. Consultation P0 exclusions are delivery boundaries, not deletion instructions. Next.js/CopilotKit and the recorded-session flow remain pending implementation and validation; this merge does not claim that migration or integration is complete.
+- **Owner:** Team
 
 ### 2026-09-12 — Publish implementation handoff documents
 

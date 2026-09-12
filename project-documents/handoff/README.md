@@ -15,7 +15,7 @@ Audience: Stephen and the implementation team
 A client explores a 3D body record containing assessment evidence and coach explanations. A coach records a short session note inside the app, the agent proposes sourced region annotations, and the coach confirms them. The client explores those updates and adds an observation at the selected location.
 
 ## Current repository reality
-The merged Vite prototype is exploratory: muscle visualization, fictional recovery/routine screens and a scripted companion. It is not the locked Next.js/agent implementation. Preserve it as reference while building the selected flow.
+The combined Vite prototype includes muscle visualization, fictional recovery/routine screens, a report-backed Assessment story, an optional WhatsApp backend and a scripted companion. Golf mockup source and images are retained but not mounted in navigation. See [combined implementation status](integration-status.md) for the boundary between existing features and the planned consultation flow. The Next.js/agent implementation remains pending; preserve existing work while building it.
 
 ## What is decided
 Client-first body navigation; one coach capture/review mode; recording processed after Finish; Next.js, vendored Human Atlas, CopilotKit, OpenAI and localStorage; one fictional client; localhost demo.

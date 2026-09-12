@@ -10,6 +10,8 @@ The detailed acceptance contract is the [PRD](../handoff/prd.md). Architectural 
 
 Current demo loop: existing body record → Start session → record → Finish → agent proposes regional updates → coach reviews/confirms → client explores → client adds an observation.
 
+This is the target consultation loop, not a claim about the current Vite prototype. The [combined implementation status](../handoff/integration-status.md) records the existing assessment, recovery, routine, WhatsApp and golf work preserved alongside this brief. P0 exclusions do not require deleting those existing features.
+
 1. [`01-proposition.md`](01-proposition.md) — concise concept, problem, outcome, and non-goals.
 2. [`02-users-and-environment.md`](02-users-and-environment.md) — target users, setting, jobs, relationships, and contextual advantage.
 3. [`03-agent-workflow.md`](03-agent-workflow.md) — trigger, perception, reasoning, tools, action, state, and human control.
