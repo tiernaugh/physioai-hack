@@ -76,7 +76,9 @@ Passed: user accepted capture of the brief in the concept folder. See the decisi
 
 ## Next action
 
-Review the client-first storyboard and pitch under [T-002](T-002-validate-contextual-advantage.md). [T-003](T-003-prove-critical-integration.md) is ready to test viewer load, selection, source-backed annotation and a region-bound saved note. Neither validation is complete.
+**CTO review of the proposed stack** in [`../concept/05-technical-architecture.md`](../concept/05-technical-architecture.md) (transplant Human Atlas renderer into Next.js; CopilotKit + OpenAI structured outputs; `localStorage`; `localhost`). Open questions for review are listed at the end of that document. Once confirmed, [T-003](T-003-prove-critical-integration.md) runs as re-scoped: transplant (30-minute time-box), cold load on the demo device, CopilotKit wrapping `SceneState`, allowlist concept IDs. [T-002](T-002-validate-contextual-advantage.md) can run in parallel from the storyboard. Neither validation is complete.
+
+Product-track prerequisite for both: hand-author the movement → region allowlist and agree the `Annotation` shape (starter versions in the architecture doc).
 
 ## Stretch queue
 

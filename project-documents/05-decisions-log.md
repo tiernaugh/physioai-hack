@@ -17,6 +17,15 @@ Record decisions that materially affect product scope, interaction design, archi
 
 ## Current decisions
 
+### 2026-09-12 — Transplant the Human Atlas renderer; Next.js + CopilotKit + OpenAI stack
+
+- **Status:** Proposed — pending CTO review
+- **Decision:** Vendor Human Atlas's renderer (`scene.tsx` + four sibling files) and packaged BodyParts3D geometry into our own Next.js App Router app as `src/atlas/`, rather than forking the repo or rebuilding a viewer. Use CopilotKit for agent ↔ UI shared state and actions, OpenAI structured outputs with a region-allowlist enum for extraction, `localStorage` for notes, and `localhost` for the demo. Skip Auth0, Trigger.dev, Exa, Ambiguous AI and Cloud Run in P0.
+- **Reason:** Reading the upstream source (2026-09-12) shows `scene.tsx` depends only on `react`, `three` and sibling files, the build config is plain Vite, and an agent-drives-viewer tool layer already exists upstream. The agent-to-viewer integration T-003 was written to test is therefore already proven; the remaining risk is the 33 MB geometry payload on venue wifi and the CopilotKit shared-state wrapper. Two load-bearing sponsor integrations map directly to required behaviour; the rest are non-goals or belong to the superseded coach-first concept.
+- **Alternatives considered:** Fork wholesale (fast, but inherits a 102 MB repo, unused beta toolchain and a UI we rewrite anyway; weak provenance for judges). Rebuild from scratch (the packaged geometry is the expensive part; pointless). Vite + separate Node runtime for CopilotKit (viable; two processes for no gain).
+- **Consequences:** T-003 is re-scoped from "can the agent move the viewer" to "transplant under 30 minutes, cold-load on the demo device, CopilotKit wraps `SceneState`". The hand-authored movement → region allowlist and the `Annotation` shape become the first artefacts both tracks depend on. Upstream MIT LICENSE and CC BY 4.0 ATTRIBUTION.md ship with the vendored module. Full analysis in `concept/05-technical-architecture.md`.
+- **Owner:** Product lead proposes; CTO to confirm or amend before build lock.
+
 ### 2026-09-12 — Demonstrate continuity through an incoming update
 
 - **Status:** Decided

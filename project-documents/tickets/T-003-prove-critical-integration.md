@@ -45,7 +45,18 @@ The build should fail early on an uncertain dependency rather than after the int
 
 ## Implementation notes
 
-Current critical boundary: body-viewer selection and focus connected to source-backed assessment annotations and persistent client notes. Test Human Atlas reuse or a comparable viewer on the demo device. Audio capture and live device integration are outside P0. Preserve upstream license and data attribution if reusing assets.
+Re-scoped 2026-09-12 after reading the Human Atlas source (see `../concept/05-technical-architecture.md`, status Proposed pending CTO review).
+
+**Retired by inspection:** agent-driven region selection. Upstream `app/agent-tools.ts` already selects concepts in the 3D scene via `SceneState.selected`; `scene.tsx` is a controlled component depending only on `react`, `three` and four sibling files.
+
+**Current critical boundary, in order:**
+
+1. **Transplant** — scaffold Next.js App Router; vendor `scene.tsx`, `anatomy.ts`, `model-download.ts`, `pointer-tap.ts`, `explosion-layout.ts` and `public/models/` into `src/atlas/` with upstream LICENSE and ATTRIBUTION.md. Mount via `dynamic(..., {ssr:false})`. **Time-box 30 minutes.** Fallback: fork and gut `page.tsx`.
+2. **Cold load on the demo device** — ~33 MB across 14 chunks. Measure from `localhost` and from venue wifi; record both. This is the most likely demo failure.
+3. **CopilotKit wraps `SceneState`** — `useCopilotReadable` on selection + assessment; one `useCopilotAction('focus_region')` that mutates real state and visibly moves the viewer. This is the actual unproven boundary.
+4. **Allowlist resolution** — find the atlas concept IDs for elbow, hip, shoulder and ankle joint regions in `public/models/atlas.json` and fill the TBDs in the architecture doc.
+
+Audio capture and live device integration remain outside P0.
 
 ## Validation
 
