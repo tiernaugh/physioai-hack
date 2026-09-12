@@ -1,0 +1,178 @@
+/* Today's goals, comparison and interactive anatomy share one hero. */
+.care-goals-hero.care-anatomy-hero {
+  grid-template-columns: minmax(240px, 0.9fr) minmax(0, 1.2fr);
+  padding: 0;
+  gap: 0;
+  background: radial-gradient(ellipse at 15% 15%, #f1f3e7, #e9eddd 70%);
+}
+.care-hero-story {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 36px;
+  padding: 34px;
+  min-width: 0;
+}
+.care-hero-story .care-goals-copy h2 {
+  font-size: clamp(30px, 3vw, 44px);
+}
+.care-hero-story .care-goals-copy p {
+  font-size: 11px;
+}
+.care-hero-progress {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 22px;
+  padding: 0;
+  color: #4e6840;
+  background: none;
+  font-size: 11px;
+}
+.care-age-comparison {
+  padding: 22px;
+  border-radius: 12px;
+  border: 1px solid #d8e0c9;
+  background: #fbfcf5b8;
+  color: #34503b;
+}
+.care-comparison-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.care-comparison-heading .care-kicker {
+  font-size: 8px;
+  letter-spacing: 1.1px;
+}
+.care-comparison-sample {
+  font-size: 9px;
+  padding: 4px 7px;
+  background: #e8eddf;
+  color: #5f7052;
+  border-radius: 5px;
+}
+.care-percentile-number {
+  font-family: "Manrope", sans-serif;
+  font-size: 58px;
+  letter-spacing: -3px;
+  font-weight: 600;
+  line-height: 1.2;
+  margin-top: 15px;
+}
+.care-percentile-number > span {
+  font-size: 25px;
+  letter-spacing: -1px;
+  font-weight: 400;
+}
+.care-age-comparison > p {
+  font-size: 11px;
+  color: #627557;
+  line-height: 1.7;
+  margin-top: 5px;
+}
+.care-age-comparison > p > span {
+  padding: 0 3px;
+}
+.care-percentile-scale {
+  position: relative;
+  height: 5px;
+  border-radius: 8px;
+  margin-top: 22px;
+  background: linear-gradient(90deg, #e0e6d6, #a7b887, #597943);
+}
+.care-percentile-scale > span {
+  position: absolute;
+  top: 50%;
+  width: 11px;
+  height: 11px;
+  transform: translate(-50%, -50%);
+  border: 2px solid #f9fbf3;
+  border-radius: 50%;
+  background: #3e5c36;
+  box-shadow: 0 0 0 1px #71865c;
+}
+.care-percentile-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  font-size: 8px;
+  color: #78856d;
+}
+.care-comparison-info {
+  margin-top: 18px;
+  padding-top: 13px;
+  border-top: 1px solid #dfe6d4;
+}
+.care-comparison-info summary {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+  list-style: none;
+  font-size: 10px;
+  color: #607254;
+}
+.care-comparison-info summary::-webkit-details-marker { display: none; }
+.care-comparison-info summary:focus-visible {
+  outline: 2px solid #647b45;
+  outline-offset: 5px;
+  border-radius: 2px;
+}
+.care-comparison-info p {
+  margin-top: 12px;
+  font-size: 11px;
+  line-height: 1.7;
+  color: #65725b;
+}
+.care-hero-body.care-body-card {
+  min-width: 0;
+  border: 0;
+  border-left: 1px solid #dce3cb;
+  border-radius: 0;
+  background: #f7f9f040;
+}
+.care-hero-body > .care-card-heading { padding: 22px; }
+.care-hero-body .care-card-heading h2 { font-size: 18px; }
+.care-app .care-hero-body .record-viewer {
+  height: 410px;
+  min-height: 410px;
+  background: transparent;
+}
+.care-hero-body .care-body-callout {
+  top: 113px;
+  right: 16px;
+  width: 132px;
+  padding: 11px;
+}
+.care-hero-body .care-region-strip { background: #f8faf26b; }
+.care-today-grid.care-today-followup { grid-template-columns: minmax(0, 1fr); }
+.care-today-followup .care-right-column {
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  align-items: start;
+}
+@media (max-width: 1100px) {
+  .care-hero-story { padding: 24px; gap: 28px; }
+  .care-hero-story .care-goals-copy h2 { font-size: 30px; }
+  .care-age-comparison { padding: 17px; }
+  .care-percentile-number { font-size: 50px; }
+  .care-hero-body > .care-card-heading { padding: 21px 16px; }
+  .care-hero-body .care-body-callout { top: 92px; right: 10px; width: 119px; }
+  .care-app .care-hero-body .record-viewer .view-watermark { font-size: 27px; left: 16px; }
+  .care-hero-body .care-body-dates { padding: 17px 15px; }
+  .care-hero-body .care-region-strip { padding: 14px; flex-wrap: wrap; }
+  .care-hero-body .care-region-strip > div { flex: 1; }
+  .care-hero-body .care-region-strip > label { flex-basis: 100%; max-width: none; }
+}
+@media (max-width: 720px) {
+  .care-goals-hero.care-anatomy-hero { grid-template-columns: minmax(0, 1fr); }
+  .care-hero-story { display: contents; }
+  .care-hero-story .care-goals-copy { order: 1; padding: 25px; }
+  .care-hero-story .care-goals-copy h2 { font-size: 36px; }
+  .care-hero-body.care-body-card { order: 2; border-left: 0; border-top: 1px solid #dce3cb; }
+  .care-age-comparison { order: 3; margin: 22px; padding: 20px; }
+  .care-app .care-hero-body .record-viewer { height: 420px; min-height: 420px; }
+  .care-today-followup .care-right-column { grid-template-columns: minmax(0, 1fr); }
+}

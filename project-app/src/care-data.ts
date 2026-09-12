@@ -37,6 +37,9 @@ export const actorNames: Record<Actor, string> = {
   physio: "Stephen · Physio",
   agent: "Physio companion",
 };
+// Display-only example: no recorded age or population benchmark is available.
+export const sampleAgeComparison = { ageBand: "35–44", percentile: 72 } as const;
+
 export const snapshots = [
   {
     date: "2026-07-20",

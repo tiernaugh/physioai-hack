@@ -141,3 +141,12 @@ Record decisions that materially affect product scope, interaction design, archi
 - **Reason:** Focus the visible app on the requested four-screen experience without deleting earlier work.
 - **Consequences:** Exercise details, session logging, update forms and demo information remain contextual dialogs within the four pages. Legacy views can be restored deliberately through the retained flag.
 - **Owner:** Team, following Kingsley's direction.
+
+
+### 2026-09-12 — Bring anatomy and an age comparison into Today’s hero
+
+- **Status:** Implemented following Kingsley's request
+- **Decision:** Move the existing interactive body, date snapshots and region controls into the goals hero. Add a top-28% / 72nd-percentile comparison card using an explicit example age band of 35–44. Preserve the four visible pages and hidden legacy components.
+- **Data boundary:** Alex has no recorded age and the prototype has no age-matched population reference. The number and cohort are display-only fixtures, marked “Example comparison”; the info disclosure explains their limits and distinguishes percentile from the 78/100 score. A real ranking requires an actual age, a defined comparable measure and a suitable reference dataset.
+- **Layout:** Goals and percentile sit beside the body on desktop. Mobile puts the body directly after the goals, then the comparison. Current score, status, appointment and exercises remain below the hero.
+- **Owner:** Team, following Kingsley's direction.

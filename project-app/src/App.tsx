@@ -48,6 +48,7 @@ import {
   loadCareStore,
   nextAppointment,
   sampleActivity,
+  sampleAgeComparison,
   saveCareStore,
   sessionActivity,
   shortDate,
@@ -55,6 +56,7 @@ import {
 } from "./care-data";
 import type { ActivityEntry, Actor, CareStore, Human } from "./care-data";
 import "./refresh.css";
+import "./today-hero.css";
 
 type Page = "today" | "progress" | "activity" | "voice-notes";
 type Panel = "help" | "assessment" | "voice" | "update" | null;
@@ -649,119 +651,75 @@ export default function App() {
           )}
           {page === "today" && (
             <>
-              <section className="care-goals-hero">
-                <div className="care-goals-copy">
-                  <span className="care-kicker">
-                    <span /> YOUR GOALS · YOUR PACE
-                  </span>
-                  <h2>
-                    Back to the walks
-                    <br />
-                    you love.
-                  </h2>
-                  <p>
-                    More freedom to move. More confidence in your body.
-                    <br />
-                    Here’s what you and Stephen are working towards.
-                  </p>
-                  <div className="care-goal-chips">
-                    <span>
-                      <Check size={13} /> Comfortable 5 km walks
+              <section
+                className="care-goals-hero care-anatomy-hero"
+                aria-label="Your goals and body overview"
+              >
+                <div className="care-hero-story">
+                  <div className="care-goals-copy">
+                    <span className="care-kicker">
+                      <span /> YOUR GOALS · YOUR PACE
                     </span>
-                    <span>
-                      <TrendingUp size={13} /> Confidence on stairs
-                    </span>
-                    <span>
-                      <Dumbbell size={13} /> A consistent routine
-                    </span>
-                  </div>
-                </div>
-                <div className="care-goal-focus">
-                  <div className="care-goal-orbit" aria-hidden="true">
-                    <div />
-                    <div />
-                    <div />
-                    <Leaf size={43} />
-                    <span className="orbit-spark">
-                      <Sparkles size={17} />
-                    </span>
-                  </div>
-                  <div>
-                    <span className="care-kicker">ONE STEP AT A TIME</span>
-                    <strong>Move with confidence</strong>
-                    <span>Your current goal · sample care plan</span>
-                    <button onClick={() => navigate("progress")}>
+                    <h2>
+                      Back to the walks
+                      <br />
+                      you love.
+                    </h2>
+                    <p>
+                      More freedom to move. More confidence in your body.
+                      <br />
+                      Here’s what you and Stephen are working towards.
+                    </p>
+                    <div className="care-goal-chips">
+                      <span>
+                        <Check size={13} /> Comfortable 5 km walks
+                      </span>
+                      <span>
+                        <TrendingUp size={13} /> Confidence on stairs
+                      </span>
+                      <span>
+                        <Dumbbell size={13} /> A consistent routine
+                      </span>
+                    </div>
+                    <button className="care-hero-progress" onClick={() => navigate("progress")}>
                       Follow your progress <ArrowRight size={15} />
                     </button>
                   </div>
-                </div>
-              </section>
-              <div className="care-summary-row">
-                <section className="care-score-card">
-                  <div className="care-score-ring">
-                    <svg viewBox="0 0 100 100" aria-hidden="true">
-                      <circle
-                        cx="50"
-                        cy="50"
-                        r="43"
-                        fill="none"
-                        stroke="#e4e8d9"
-                        strokeWidth="6"
-                      />
-                      <circle
-                        cx="50"
-                        cy="50"
-                        r="43"
-                        fill="none"
-                        stroke="#647b45"
-                        strokeWidth="6"
-                        strokeDasharray={`${78 * 2.702} 270.2`}
-                        strokeLinecap="round"
-                        transform="rotate(-90 50 50)"
-                      />
-                    </svg>
-                    <div>
-                      <strong>78</strong>
-                      <span>/ 100</span>
-                    </div>
-                  </div>
-                  <div>
-                    <span className="care-kicker">YOUR HEALTH SCORE</span>
-                    <h2>Moving forward</h2>
-                    <p>
-                      <TrendingUp size={15} /> +12 since 31 August
-                    </p>
-                    <small>Illustrative score · sample data</small>
-                  </div>
-                </section>
-                <section className="care-status-card">
-                  <span className="care-kicker">
-                    <Heart size={15} /> CURRENT STATUS
-                  </span>
-                  <h2>Rebuilding strength</h2>
-                  <p>Left hamstring · your current focus</p>
-                  <span className="care-status-pill">
-                    <i /> Building capacity
-                  </span>
-                </section>
-                <section className="care-next-card">
-                  <span className="care-kicker">
-                    <CalendarDays size={15} /> NEXT APPOINTMENT
-                  </span>
-                  <h2>Thursday, 17 Sept</h2>
-                  <p>10:00 am · Stephen · Studio 22</p>
-                  <button
-                    onClick={() => {
-                      setSelectedDay("2026-09-17");
-                      navigate("progress");
-                    }}
+                  <section
+                    className="care-age-comparison"
+                    aria-labelledby="age-comparison-title"
                   >
-                    View appointment <ArrowRight size={15} />
-                  </button>
-                </section>
-              </div>
-              <div className="care-today-grid">
-                <section className="care-body-card">
+                    <div className="care-comparison-heading">
+                      <span className="care-kicker" id="age-comparison-title">YOUR AGE GROUP</span>
+                      <span className="care-comparison-sample">Example comparison</span>
+                    </div>
+                    <div className="care-percentile-number">
+                      <span>Top</span> {100 - sampleAgeComparison.percentile}<span>%</span>
+                    </div>
+                    <p>
+                      {sampleAgeComparison.percentile}nd percentile <span>·</span> Ages {sampleAgeComparison.ageBand}
+                    </p>
+                    <div className="care-percentile-scale" aria-hidden="true">
+                      <span style={{ left: `${sampleAgeComparison.percentile}%` }} />
+                    </div>
+                    <div className="care-percentile-labels" aria-hidden="true">
+                      <span>0</span><span>50</span><span>100</span>
+                    </div>
+                    <details className="care-comparison-info">
+                      <summary><CircleHelp size={14} /> About this comparison</summary>
+                      <p>
+                        This example places a health score above {sampleAgeComparison.percentile}% of an
+                        illustrative age group. Alex’s age isn’t recorded and no
+                        age-matched population dataset is connected, so this is
+                        not a measured ranking. It is separate from the 78/100 health score.
+                      </p>
+                    </details>
+                  </section>
+                </div>
+                <section
+                  className="care-body-card care-hero-body"
+                  aria-label="Your body today"
+                >
                   <div className="care-card-heading">
                     <div>
                       <span className="care-kicker">THE WHOLE PICTURE</span>
@@ -852,6 +810,72 @@ export default function App() {
                     </label>
                   </div>
                 </section>
+              </section>
+              <div className="care-summary-row">
+                <section className="care-score-card">
+                  <div className="care-score-ring">
+                    <svg viewBox="0 0 100 100" aria-hidden="true">
+                      <circle
+                        cx="50"
+                        cy="50"
+                        r="43"
+                        fill="none"
+                        stroke="#e4e8d9"
+                        strokeWidth="6"
+                      />
+                      <circle
+                        cx="50"
+                        cy="50"
+                        r="43"
+                        fill="none"
+                        stroke="#647b45"
+                        strokeWidth="6"
+                        strokeDasharray={`${78 * 2.702} 270.2`}
+                        strokeLinecap="round"
+                        transform="rotate(-90 50 50)"
+                      />
+                    </svg>
+                    <div>
+                      <strong>78</strong>
+                      <span>/ 100</span>
+                    </div>
+                  </div>
+                  <div>
+                    <span className="care-kicker">YOUR HEALTH SCORE</span>
+                    <h2>Moving forward</h2>
+                    <p>
+                      <TrendingUp size={15} /> +12 since 31 August
+                    </p>
+                    <small>Illustrative score · sample data</small>
+                  </div>
+                </section>
+                <section className="care-status-card">
+                  <span className="care-kicker">
+                    <Heart size={15} /> CURRENT STATUS
+                  </span>
+                  <h2>Rebuilding strength</h2>
+                  <p>Left hamstring · your current focus</p>
+                  <span className="care-status-pill">
+                    <i /> Building capacity
+                  </span>
+                </section>
+                <section className="care-next-card">
+                  <span className="care-kicker">
+                    <CalendarDays size={15} /> NEXT APPOINTMENT
+                  </span>
+                  <h2>Thursday, 17 Sept</h2>
+                  <p>10:00 am · Stephen · Studio 22</p>
+                  <button
+                    onClick={() => {
+                      setSelectedDay("2026-09-17");
+                      navigate("progress");
+                    }}
+                  >
+                    View appointment <ArrowRight size={15} />
+                  </button>
+                </section>
+              </div>
+              <div className="care-today-grid care-today-followup">
                 <div className="care-right-column">
                   <section className="care-routine-card">
                     <div className="care-card-heading">
@@ -1420,7 +1444,7 @@ export default function App() {
           <div className="care-detail-note">
             <strong>About the demo</strong>
             <p>
-              Alex’s profile, health scores, appointments and agent insights are
+              Alex’s profile, health scores, age-group comparison, appointments and agent insights are
               fictional examples. The anatomy is a reference muscle atlas, not a
               personal scan. The health score is illustrative and does not
               measure tissue healing.
