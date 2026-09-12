@@ -3,6 +3,8 @@ import { promisify } from 'node:util';
 import { mkdtemp, writeFile, readFile, rm, access } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
+import { existsSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import ffmpegPath from 'ffmpeg-static';
 import { extractionSchema } from './pipeline.mjs';
 const execute = promisify(execFile);
@@ -36,7 +38,10 @@ export function extractLocally(transcript) {
 }
 
 export function providers(env = process.env, run = execute) {
-  const model = resolve(env.WHISPER_MODEL_PATH || 'models/ggml-base.en.bin');
+  const localModel = resolve('models/ggml-base.en.bin');
+  const workspaceModel = fileURLToPath(new URL('../../models/ggml-base.en.bin', import.meta.url));
+  const model = env.WHISPER_MODEL_PATH ? resolve(env.WHISPER_MODEL_PATH)
+    : existsSync(localModel) ? localModel : workspaceModel;
   const local = {
     async ready() {
       await access(model);

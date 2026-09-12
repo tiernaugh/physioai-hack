@@ -3,6 +3,9 @@
 Updated: 2026-09-12
 Status: Iterating with Tiernan; latest progress replay is build-checked, awaiting user feedback
 
+## GitHub merge update
+During commit/push, origin/main contained Kingsley's commits 69b5e2e and 4f3d85b. These were merged, preserving his refreshed Today / Your progress / Activity / Voice notes workspace and adding Body record as a separate navigation page. His new VoiceNotes, voice-annotations, AgentDeepDive and related code are now present: audit these before building new extraction capabilities, because the earlier capability inventory below predates them. Body record itself still uses its isolated simulated flow. The combined production build passes; no browser review was run for the merged shell. All prototype/docs changes are being committed and pushed in this sync.
+
 ## Immediate instructions for the next chat
 - Continue in the existing app. Do not restart architecture or scaffold Next.js.
 - Tight deadline: the user explicitly asked not to spend tokens repeatedly testing in a browser. Run a proportionate build check; let Tiernan report visual/interaction issues unless a targeted check is needed to resolve a concrete bug.

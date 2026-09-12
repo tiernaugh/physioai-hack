@@ -1,5 +1,8 @@
 export type RegionId =
   | "left-hamstring"
+  | "right-hamstring"
+  | "left-ankle"
+  | "right-ankle"
   | "left-shoulder"
   | "right-shoulder"
   | "chest"
@@ -29,6 +32,27 @@ export const regions: {
   note: string;
   reported: number | null;
 }[] = [
+  {
+    id: "right-hamstring",
+    name: "Right hamstring",
+    structure: "Biceps femoris · semitendinosus · semimembranosus",
+    note: "No observations recorded in this demo profile.",
+    reported: null,
+  },
+  {
+    id: "left-ankle",
+    name: "Left ankle",
+    structure: "Ankle region · associated lower-leg reference musculature",
+    note: "Voice observations can be linked to this reference region.",
+    reported: null,
+  },
+  {
+    id: "right-ankle",
+    name: "Right ankle",
+    structure: "Ankle region · associated lower-leg reference musculature",
+    note: "Voice observations can be linked to this reference region.",
+    reported: null,
+  },
   {
     id: "left-hamstring",
     name: "Left hamstring",
