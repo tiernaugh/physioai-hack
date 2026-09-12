@@ -4,6 +4,8 @@
 
 A working React + TypeScript + Three.js prototype based on the project plan. The overview includes a six-month hamstring recovery visualization using a locally packaged BodyParts3D muscular atlas. All profile, observation, recovery, and routine data is fictional. No backend, account, API key, or runtime anatomy download is required.
 
+This is the implementation of the repository's selected client-facing body-record concept. Product context, requirements, architecture, risks, and the demo story remain documented in [`../project-documents/concept/`](../project-documents/concept/README.md).
+
 ## Run locally
 
 Use Node.js 22.13 or newer.
