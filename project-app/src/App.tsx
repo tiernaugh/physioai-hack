@@ -52,6 +52,7 @@ import {
   loadCareStore,
   nextAppointment,
   sampleActivity,
+  sampleAgeAttributes,
   sampleAgeComparison,
   saveCareStore,
   sessionActivity,
@@ -622,142 +623,130 @@ export default function App() {
 
           {page === "today" && (
             <>
-              <section
-                className="care-goals-hero care-anatomy-hero"
-                aria-label="Your goals and body overview"
-              >
-                <div className="care-hero-story">
-                  <div className="care-goals-copy">
-                    <span className="care-kicker">
-                      <span /> YOUR GOALS · YOUR PACE
-                    </span>
-                    <h2>
-                      Back to the walks
-                      <br />
-                      you love.
-                    </h2>
-                    <p>
-                      More freedom to move. More confidence in your body.
-                      <br />
-                      Here’s what you and Stephen are working towards.
-                    </p>
-                    <div className="care-goal-chips">
-                      <span>
-                        <Check size={13} /> Comfortable 5 km walks
-                      </span>
-                      <span>
-                        <TrendingUp size={13} /> Confidence on stairs
-                      </span>
-                      <span>
-                        <Dumbbell size={13} /> A consistent routine
-                      </span>
-                    </div>
-                    <button className="care-hero-progress" onClick={() => navigate("progress")}>
-                      Follow your progress <ArrowRight size={15} />
-                    </button>
-                  </div>
-                  <section
-                    className="care-age-comparison"
-                    aria-labelledby="age-comparison-title"
-                  >
-                    <div className="care-comparison-heading">
-                      <span className="care-kicker" id="age-comparison-title">YOUR AGE GROUP</span>
-                      <span className="care-comparison-sample">Example comparison</span>
-                    </div>
-                    <div className="care-percentile-number">
-                      <span>Top</span> {100 - sampleAgeComparison.percentile}<span>%</span>
-                    </div>
-                    <p>
-                      {sampleAgeComparison.percentile}nd percentile <span>·</span> Ages {sampleAgeComparison.ageBand}
-                    </p>
-                    <div className="care-percentile-scale" aria-hidden="true">
-                      <span style={{ left: `${sampleAgeComparison.percentile}%` }} />
-                    </div>
-                    <div className="care-percentile-labels" aria-hidden="true">
-                      <span>0</span><span>50</span><span>100</span>
-                    </div>
-                    <details className="care-comparison-info">
-                      <summary><CircleHelp size={14} /> About this comparison</summary>
-                      <p>
-                        This example places a health score above {sampleAgeComparison.percentile}% of an
-                        illustrative age group. Alex’s age isn’t recorded and no
-                        age-matched population dataset is connected, so this is
-                        not a measured ranking. It is separate from the 78/100 health score.
-                      </p>
-                    </details>
-                  </section>
-                </div>
-                <section
-                  className="care-body-card care-hero-body"
-                  aria-label="Your body today"
-                >
-                  <BodyRecord embedded />
-                </section>
-              </section>
-              <div className="care-summary-row">
-                <section className="care-score-card">
-                  <div className="care-score-ring">
-                    <svg viewBox="0 0 100 100" aria-hidden="true">
-                      <circle
-                        cx="50"
-                        cy="50"
-                        r="43"
-                        fill="none"
-                        stroke="#e4e8d9"
-                        strokeWidth="6"
-                      />
-                      <circle
-                        cx="50"
-                        cy="50"
-                        r="43"
-                        fill="none"
-                        stroke="#647b45"
-                        strokeWidth="6"
-                        strokeDasharray={`${78 * 2.702} 270.2`}
-                        strokeLinecap="round"
-                        transform="rotate(-90 50 50)"
-                      />
-                    </svg>
-                    <div>
-                      <strong>78</strong>
-                      <span>/ 100</span>
-                    </div>
-                  </div>
-                  <div>
-                    <span className="care-kicker">YOUR HEALTH SCORE</span>
-                    <h2>Moving forward</h2>
-                    <p>
-                      <TrendingUp size={15} /> +12 since 31 August
-                    </p>
-                    <small>Illustrative score · sample data</small>
-                  </div>
-                </section>
-                <section className="care-status-card">
-                  <span className="care-kicker">
-                    <Heart size={15} /> CURRENT STATUS
+              <section className="care-goals-bar" aria-label="Your goals">
+                <span className="care-kicker">
+                  <span /> YOUR GOALS
+                </span>
+                <strong>Back to the walks you love</strong>
+                <div className="care-goal-chips">
+                  <span>
+                    <Check size={12} /> Comfortable 5 km walks
                   </span>
-                  <h2>Rebuilding strength</h2>
+                  <span>
+                    <TrendingUp size={12} /> Confidence on stairs
+                  </span>
+                  <span>
+                    <Dumbbell size={12} /> A consistent routine
+                  </span>
+                </div>
+              </section>
+              <div className="care-vitals-strip">
+                <section className="care-vital care-vital-score" aria-label="Body score">
+                  <span className="care-kicker">BODY SCORE</span>
+                  <div className="care-vital-score-body">
+                    <div className="care-score-ring">
+                      <svg viewBox="0 0 100 100" aria-hidden="true">
+                        <circle
+                          cx="50"
+                          cy="50"
+                          r="43"
+                          fill="none"
+                          stroke="#e4e8d9"
+                          strokeWidth="7"
+                        />
+                        <circle
+                          cx="50"
+                          cy="50"
+                          r="43"
+                          fill="none"
+                          stroke="#647b45"
+                          strokeWidth="7"
+                          strokeDasharray={`${78 * 2.702} 270.2`}
+                          strokeLinecap="round"
+                          transform="rotate(-90 50 50)"
+                        />
+                      </svg>
+                      <div>
+                        <strong>78</strong>
+                        <span>/ 100</span>
+                      </div>
+                    </div>
+                    <div>
+                      <p>
+                        <TrendingUp size={13} /> +12 since 31 Aug
+                      </p>
+                      <small>Illustrative score · sample data</small>
+                      <button
+                        className="care-vital-link"
+                        onClick={() => navigate("progress")}
+                      >
+                        Follow your progress <ArrowRight size={13} />
+                      </button>
+                    </div>
+                  </div>
+                </section>
+                <section className="care-vital care-vital-status" aria-label="Current status">
+                  <span className="care-kicker">
+                    <Heart size={12} /> STATUS
+                  </span>
+                  <strong>Rebuilding strength</strong>
                   <p>Left hamstring · your current focus</p>
                   <span className="care-status-pill">
                     <i /> Building capacity
                   </span>
                 </section>
-                <section className="care-next-card">
+                <section className="care-vital care-vital-next" aria-label="Next appointment">
                   <span className="care-kicker">
-                    <CalendarDays size={15} /> NEXT APPOINTMENT
+                    <CalendarDays size={12} /> NEXT APPOINTMENT
                   </span>
-                  <h2>Thursday, 17 Sept</h2>
-                  <p>10:00 am · Stephen · Studio 22</p>
+                  <strong>Thu 17 Sep · 10:00</strong>
+                  <p>Stephen · Studio 22</p>
                   <button
+                    className="care-vital-link"
                     onClick={() => {
                       setSelectedDay("2026-09-17");
                       navigate("progress");
                     }}
                   >
-                    View appointment <ArrowRight size={15} />
+                    View appointment <ArrowRight size={13} />
                   </button>
                 </section>
+                <section
+                  className="care-vital care-age-comparison"
+                  aria-labelledby="age-comparison-title"
+                >
+                  <div className="care-comparison-heading">
+                    <span className="care-kicker" id="age-comparison-title">YOUR AGE GROUP</span>
+                    <span className="care-comparison-sample">Ages {sampleAgeComparison.ageBand}</span>
+                  </div>
+                  <div className="care-trump-overall">
+                    <b>78</b>
+                    <span>
+                      Overall
+                      <br />
+                      {sampleAgeComparison.percentile}nd percentile · +4 since 31 Aug
+                    </span>
+                  </div>
+                  <ul className="care-trump-rows">
+                    {sampleAgeAttributes.map((attribute) => (
+                      <li key={attribute.id}>
+                        <span>{attribute.label}</span>
+                        <i aria-hidden="true">
+                          <i style={{ width: `${attribute.percentile}%` }} />
+                        </i>
+                        <b>{attribute.percentile}</b>
+                      </li>
+                    ))}
+                  </ul>
+                  <small className="care-comparison-foot">Percentile within your age group · Updated 12 Sep</small>
+                </section>
               </div>
+              <section
+                className="care-body-card care-hero-body"
+                aria-label="Your body today"
+              >
+                <BodyRecord embedded />
+              </section>
               <div className="care-today-grid care-today-followup">
                 <div className="care-right-column">
                   <section className="care-routine-card">

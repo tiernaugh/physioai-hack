@@ -1,10 +1,18 @@
 import { Pause, Play, RotateCcw } from 'lucide-react';
+import { formatDate, timeline } from './model';
 
-export default function ProgressTimeline({ step, playing, onStep, onPlay }: { step: number; playing: boolean; onStep: (step: number) => void; onPlay: () => void }) {
-  return <div className="br-timeline">
-    <div className="br-timeline-head"><div><span className="br-eyebrow">YOUR BODY OVER TIME</span><strong>{step === 0 ? '31 August 2026' : '7 September 2026'}</strong></div><button className="br-play" aria-label={playing ? 'Pause replay' : step === 1 ? 'Replay progress' : 'Play progress'} onClick={onPlay}>{playing ? <Pause size={18}/> : step === 1 ? <RotateCcw size={18}/> : <Play size={18}/>}<span>{playing ? 'Pause' : step === 1 ? 'Replay' : 'Play'}</span></button></div>
-    <label className="sr-only" htmlFor="br-record-date">Recorded check-in</label><input id="br-record-date" type="range" min="0" max="1" step="1" value={step} aria-valuetext={step === 0 ? '31 August, baseline check-in' : '7 September, consultation'} onChange={event => onStep(Number(event.target.value))}/>
-    <div className="br-timeline-dates"><button aria-pressed={step === 0} onClick={() => onStep(0)}><span>31 Aug</span><small>Baseline check-in</small></button><button aria-pressed={step === 1} onClick={() => onStep(1)}><span>7 Sep</span><small>Consultation</small></button></div>
-    <small className="br-timeline-foot">2 recorded check-ins · Colours show change from baseline</small>
+// Slim date scrubber overlaid on the viewport. Stops come from the model spine; nothing here is hardcoded.
+export default function ProgressTimeline({ index, playing, compact = false, onScrub, onPlay }: { index: number; playing: boolean; compact?: boolean; onScrub: (index: number) => void; onPlay: () => void }) {
+  const last = timeline.length - 1;
+  const date = timeline[index] ?? timeline[last];
+  const atEnd = index >= last;
+  return <div className={`br-scrub ${compact ? 'br-scrub-compact' : ''}`} role="group" aria-label="Record date">
+    <button type="button" className="br-scrub-play" aria-label={playing ? 'Pause replay' : atEnd ? 'Replay from the first check-in' : 'Play through the dates'} onClick={onPlay}>{playing ? <Pause size={13}/> : atEnd ? <RotateCcw size={13}/> : <Play size={13}/>}</button>
+    <div className="br-scrub-track">
+      <input type="range" min={0} max={last} step={1} value={index} aria-label="Record date" aria-valuetext={`${formatDate(date, true)}${atEnd ? ', latest' : ''}`} onChange={event => onScrub(Number(event.target.value))}/>
+      <span className="br-scrub-line" aria-hidden="true"><span className="br-scrub-fill" style={{ width: `${(index / last) * 100}%` }}/></span>
+      {timeline.map((stop, i) => <button type="button" key={stop} tabIndex={-1} className={`br-scrub-stop ${i === index ? 'current' : ''} ${i < index ? 'passed' : ''}`} style={{ left: `${(i / last) * 100}%` }} aria-label={`Show ${formatDate(stop, true)}`} aria-pressed={i === index} onClick={() => onScrub(i)}><i/><span>{formatDate(stop)}</span></button>)}
+    </div>
+    <div className="br-scrub-current" aria-live="polite"><strong>{formatDate(date, true)}</strong><small>{atEnd ? 'Latest' : playing ? 'Replaying' : 'Earlier date'}</small></div>
   </div>;
 }

@@ -37,8 +37,14 @@ export const actorNames: Record<Actor, string> = {
   physio: "Stephen · Physio",
   agent: "Physio companion",
 };
-// Display-only example: no recorded age or population benchmark is available.
+// Demo values for the age-group card; attribute percentiles average to the overall percentile.
 export const sampleAgeComparison = { ageBand: "35–44", percentile: 72 } as const;
+export const sampleAgeAttributes = [
+  { id: "force", label: "Force generated", percentile: 68 },
+  { id: "mobility", label: "Mobility / range", percentile: 74 },
+  { id: "balance", label: "Left–right balance", percentile: 61 },
+  { id: "consistency", label: "Consistency", percentile: 85 },
+] as const;
 
 export const snapshots = [
   {

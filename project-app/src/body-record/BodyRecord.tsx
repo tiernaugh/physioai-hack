@@ -1,17 +1,22 @@
 import { useEffect, useRef, useState } from 'react';
 import { ArrowRight, Check, Expand, Mic, Minimize, Plus, RotateCcw, X } from 'lucide-react';
 import RecordViewer from './RecordViewer';
-import ProgressPanel from './ProgressPanel';
+import ChangeCard, { statusLabel } from './ProgressPanel';
 import ProgressTimeline from './ProgressTimeline';
-import { baseline, initialObservations, consultation, progressRecords, progressStatus, canConfirm, locations, sampleProposals, sampleTranscript } from './model';
-import type { Annotation, Observation, Region } from './model';
+import { baseline, initialObservations, consultation, canConfirm, locations, sampleProposals, sampleTranscript, timeline, formatDate, statusAt, annotationsAsOf, observationsAsOf } from './model';
+import type { Annotation, Observation, Region, Status } from './model';
 import './body-record.css';
 
 type Stage = 'idle' | 'capture' | 'recording' | 'processing' | 'review' | 'error';
+const LAST = timeline.length - 1;
+const latestDate = timeline[LAST];
+const STEP_MS = 700;
+const legend: Status[] = ['improved', 'unchanged', 'worsened', 'none'];
+
 export default function BodyRecord({ embedded = false }: { embedded?: boolean }) {
-  const [timelineStep, setTimelineStep] = useState(1);
+  const [dateIndex, setDateIndex] = useState(LAST);
   const [playing, setPlaying] = useState(false);
-  const [view, setView] = useState<'notes' | 'progress'>('notes');
+  const [isolate, setIsolate] = useState(true);
   const [selected, setSelected] = useState<Region | null>(null);
   const [details, setDetails] = useState(true);
   const [expanded, setExpanded] = useState(embedded && location.hash === '#body-record');
@@ -39,7 +44,11 @@ export default function BodyRecord({ embedded = false }: { embedded?: boolean })
   const compact = embedded && !expanded;
   const showDetails = !compact && (details || isCapture);
   const published = confirmed.length > baseline.length;
-  const currentAnnotations = confirmed.filter(item => item.region === selected);
+  const scrubbedDate = timeline[dateIndex] ?? latestDate;
+  const atLatest = dateIndex === LAST;
+  const regionAnnotations = selected ? annotationsAsOf(confirmed.filter(item => item.region === selected), scrubbedDate) : [];
+  const regionObservations = selected ? observationsAsOf(observations.filter(item => item.region === selected), scrubbedDate) : [];
+  const regions = Object.keys(locations) as Region[];
 
   useEffect(() => {
     if (!embedded) return;
@@ -48,15 +57,21 @@ export default function BodyRecord({ embedded = false }: { embedded?: boolean })
     return () => window.removeEventListener('hashchange', openFromLink);
   }, [embedded]);
 
+  // Replay steps through the spine dates; reduced motion jumps straight to the latest.
   useEffect(() => {
-    if (!playing || view !== 'progress') return;
-    const timer = window.setTimeout(() => { setTimelineStep(1); setPlaying(false); }, 2200);
-    return () => clearTimeout(timer);
-  }, [playing, view]);
-  function scrub(step: number) { setPlaying(false); setTimelineStep(step); }
+    if (!playing) return;
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) { setDateIndex(LAST); setPlaying(false); return; }
+    const timer = window.setInterval(() => setDateIndex(index => {
+      if (index >= LAST) { setPlaying(false); return index; }
+      return index + 1;
+    }), STEP_MS);
+    return () => clearInterval(timer);
+  }, [playing]);
+  function scrub(index: number) { setPlaying(false); setDateIndex(Math.max(0, Math.min(LAST, index))); }
   function replay() {
     if (playing) { setPlaying(false); return; }
-    setTimelineStep(0); setPlaying(true);
+    if (dateIndex >= LAST) setDateIndex(0);
+    setPlaying(true);
   }
   function select(region: Region) { if (embedded) setExpanded(true); setSelected(region); setDetails(true); setFocusRequest(value => value + 1); }
   function openRecord() { setDetails(true); setExpanded(true); }
@@ -99,7 +114,7 @@ export default function BodyRecord({ embedded = false }: { embedded?: boolean })
       if (event.key === 'Tab') {
         const scope = editing || resetting ? dialogRef.current : expanded ? workspace.current : null;
         if (!scope) return;
-        const items = Array.from(scope.querySelectorAll<HTMLElement>('button:not(:disabled), textarea, select, input, [tabindex="0"]')).filter(item => item.offsetParent !== null);
+        const items = Array.from(scope.querySelectorAll<HTMLElement>('button:not(:disabled):not([tabindex="-1"]), textarea, select, input, [tabindex="0"]')).filter(item => item.offsetParent !== null);
         const first = items[0], last = items.at(-1);
         if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
         else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
@@ -112,27 +127,33 @@ export default function BodyRecord({ embedded = false }: { embedded?: boolean })
   function publish() {
     if (!canConfirm(proposals)) return;
     const eventId = crypto.randomUUID();
-    setConfirmed(items => [...items, ...proposals.map(item => ({ ...item, id: `${eventId}-${item.id}` }))]);
+    // Confirmed notes are dated to the latest spine date so they appear when scrubbing to today.
+    setConfirmed(items => [...items, ...proposals.map(item => ({ ...item, id: `${eventId}-${item.id}`, date: latestDate }))]);
     setUpdatedAt(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
     setStage('idle'); setProposals([]); setTranscript(''); setAgreed(false); setSeconds(0);
     setNotice('Consultation notes added to Alex’s record. Saved for this visit only.');
-    select(proposals[0].region!);
+    scrub(LAST); select(proposals[0].region!);
   }
   function reset() {
-    setPlaying(false); setTimelineStep(1); setView('notes'); setSelected(null); setDetails(true); setStage('idle'); setTranscript(''); setSeconds(0); setAgreed(false);
+    setPlaying(false); setDateIndex(LAST); setIsolate(true); setSelected(null); setDetails(true); setStage('idle'); setTranscript(''); setSeconds(0); setAgreed(false);
     setProposals([]); setConfirmed(baseline); setObservations(initialObservations); setEditing(null); setUpdatedAt(null); setResetting(false); setNotice('Demo reset.'); setResetRequest(value => value + 1);
   }
-  const locationSelect = (value: Region | null, onChange: (value: Region | null) => void, label: string) => <label className="br-field">{label}<select value={value ?? ''} onChange={event => onChange(event.target.value ? event.target.value as Region : null)}><option value="">Choose a region</option>{(Object.keys(locations) as Region[]).map(region => <option value={region} key={region}>{locations[region].label}</option>)}</select></label>;
+  const locationSelect = (value: Region | null, onChange: (value: Region | null) => void, label: string) => <label className="br-field">{label}<select value={value ?? ''} onChange={event => onChange(event.target.value ? event.target.value as Region : null)}><option value="">Choose a region</option>{regions.map(region => <option value={region} key={region}>{locations[region].label}</option>)}</select></label>;
+  const noteDate = (item: Annotation) => formatDate(item.date ?? latestDate, true);
 
   return <section className={`br-root ${embedded ? 'br-embedded' : ''} ${compact ? 'br-compact' : ''}`}>
-    {!embedded && <><header className="br-heading"><div><span className="br-eyebrow">ALEX MORGAN · CLIENT VIEW</span><h1>Your body record.</h1><p>Your consultation notes, observations and next review.</p></div><button className="br-reset" onClick={() => setResetting(true)}><RotateCcw size={15}/> Reset demo</button></header>
+    {!embedded && <><header className="br-heading"><div><span className="br-eyebrow">ALEX MORGAN · CLIENT VIEW</span><h1>Your body record.</h1><p>Your consultation notes, observations and reported change over time.</p></div><button className="br-reset" onClick={() => setResetting(true)}><RotateCcw size={15}/> Reset demo</button></header>
     <div className="br-demo-label"><span>PROTOTYPE</span> Demo data · Processing preview · Changes last until you leave or refresh</div></>}
     <div className={`br-workspace ${expanded ? 'br-expanded' : ''}`} ref={workspace} tabIndex={-1} role={expanded ? 'dialog' : undefined} aria-modal={expanded || undefined} aria-label="Body record workspace">
-      <div className="br-workspace-bar"><div><span className="br-eyebrow">{compact ? "THE WHOLE PICTURE" : "MY BODY"}</span>{compact ? <h2>Your body record</h2> : <strong>Alex Morgan <span className="br-subtle">/ Reference anatomy</span></strong>}</div><div className="br-actions"><button ref={captureButton} className="br-primary" onClick={() => { if (embedded) openRecord(); setPlaying(false); setView('notes'); if (stage === 'idle') setStage(proposals.length ? 'review' : 'capture'); }}><Mic size={16}/>{isCapture ? 'Consultation open' : 'Add consultation'}</button><button ref={expandButton} aria-label={expanded ? 'Exit full screen' : embedded ? 'Open body record' : 'Expand body'} onClick={() => expanded ? exitExpanded() : openRecord()}>{expanded ? <Minimize size={17}/> : <Expand size={17}/>}<span>{expanded ? 'Exit full screen' : embedded ? 'Open record' : 'Expand'}</span></button>{embedded && expanded && <button aria-label="Reset body record demo" onClick={() => setResetting(true)}><RotateCcw size={15}/></button>}</div></div>
-      {!compact && <div className="br-date-strip"><span className="br-date-dot"/><strong>7 Sep 2026</strong><span>Latest consultation</span>{embedded && <span className="br-record-demo">Demo data · Changes last for this visit</span>}<span className="br-date-divider"/><span>{updatedAt ? `Record updated today at ${updatedAt}` : 'Record updated 7 Sep 2026'}</span><span className="br-subtle">Next review · 21 Sep</span></div>}
-      <div className="br-view-switch" role="group" aria-label="Body display"><button aria-pressed={view === 'notes'} onClick={() => { setPlaying(false); setView('notes'); setDetails(true); }}>Notes</button><button aria-pressed={view === 'progress'} onClick={() => { setView('progress'); setDetails(true); }}>Progress</button><span>{view === 'progress' ? 'Comparing 31 Aug and 7 Sep · Your reported symptoms' : 'Consultation notes and your observations'}</span></div>
+      <div className="br-workspace-bar"><div><span className="br-eyebrow">{compact ? "THE WHOLE PICTURE" : "MY BODY"}</span>{compact ? <h2>Your body record</h2> : <strong>Alex Morgan <span className="br-subtle">/ Reference anatomy</span></strong>}</div><div className="br-actions"><button ref={captureButton} className="br-primary" onClick={() => { if (embedded) openRecord(); setPlaying(false); scrub(LAST); if (stage === 'idle') setStage(proposals.length ? 'review' : 'capture'); }}><Mic size={16}/>{isCapture ? 'Consultation open' : 'Add consultation'}</button><button ref={expandButton} aria-label={expanded ? 'Exit full screen' : embedded ? 'Open body record' : 'Expand body'} onClick={() => expanded ? exitExpanded() : openRecord()}>{expanded ? <Minimize size={17}/> : <Expand size={17}/>}<span>{expanded ? 'Exit full screen' : embedded ? 'Open record' : 'Expand'}</span></button>{embedded && expanded && <button aria-label="Reset body record demo" onClick={() => setResetting(true)}><RotateCcw size={15}/></button>}</div></div>
+      {!compact && <div className="br-date-strip"><span className="br-date-dot"/><strong>{formatDate(consultation.date, true)}</strong><span>Latest consultation</span>{embedded && <span className="br-record-demo">Demo data · Changes last for this visit</span>}<span className="br-date-divider"/><span>{updatedAt ? `Record updated today at ${updatedAt}` : `Record updated ${formatDate(consultation.date, true)}`}</span><span className="br-subtle">Next review · {formatDate(consultation.nextReview)}</span></div>}
       <div className={`br-grid ${!showDetails ? 'br-details-hidden' : ''}`}>
-        <div className={`br-body-area ${view === 'progress' ? 'br-progress-stage' : ''}`}><div className={`br-body-caption ${selected ? 'br-caption-selected' : ''}`}><span className="br-eyebrow">SELECT A REGION TO VIEW YOUR NOTES</span><h2></h2></div><RecordViewer compact={compact} progressStep={timelineStep} view={view} selected={selected} onSelect={select} focusRequest={focusRequest} resetRequest={resetRequest} draftRegions={stage === 'review' ? proposals.flatMap(item => item.region ? [item.region] : []) : []}/>{view === 'progress' && <>{!compact && <div className="br-change-callout" aria-live="polite"><span className="br-eyebrow">{locations[selected ?? 'shoulder'].label}</span><strong>{timelineStep === 0 ? 'Baseline recorded' : progressStatus(selected ?? 'shoulder') === 'Improved' ? 'Less discomfort' : 'No change reported'}</strong><span>{progressRecords[selected ?? 'shoulder'].activity}</span><b>{timelineStep === 0 ? progressRecords[selected ?? 'shoulder'].before : `${progressRecords[selected ?? 'shoulder'].before} → ${progressRecords[selected ?? 'shoulder'].after}`}<small> /10</small></b></div>}<ProgressTimeline step={timelineStep} playing={playing} onStep={scrub} onPlay={replay}/></>}{!compact && !details && !isCapture && <button className="br-show-details" onClick={() => setDetails(true)}>Show record details</button>}</div>
+        <div className="br-body-area">
+          <ProgressTimeline index={dateIndex} playing={playing} compact={compact} onScrub={scrub} onPlay={replay}/>
+          <div className={`br-body-caption ${selected ? 'br-caption-selected' : ''}`}><span className="br-eyebrow">SELECT A REGION TO VIEW YOUR RECORD</span><h2></h2></div>
+          <RecordViewer compact={compact} date={scrubbedDate} isolate={selected && isolate ? selected : null} selected={selected} onSelect={select} focusRequest={focusRequest} resetRequest={resetRequest} draftRegions={stage === 'review' ? proposals.flatMap(item => item.region ? [item.region] : []) : []}/>
+          {!compact && !details && !isCapture && <button className="br-show-details" onClick={() => setDetails(true)}>Show record details</button>}
+        </div>
         {showDetails && <aside className="br-panel" aria-label={isCapture ? 'Coach note' : 'Record details'}>
           {isCapture ? <>
             <div className="br-panel-title"><div><span className="br-eyebrow">STEP {stage === 'review' ? '2' : '1'} OF 2 · COACH VIEW</span><h2 ref={drawerTitle} tabIndex={-1}>{stage === 'review' ? 'Review consultation notes' : 'Add consultation'}</h2></div><button aria-label="Close coach note" disabled={stage === 'recording' || stage === 'processing'} onClick={closeCapture}><X size={17}/></button></div>
@@ -149,21 +170,29 @@ export default function BodyRecord({ embedded = false }: { embedded?: boolean })
               {!proposals.length && <p className="br-info">No proposals remain. Return to the transcript to start again.</p>}{!canConfirm(proposals) && proposals.length > 0 && <p className="br-error">Choose a location and add text for each note, or remove it.</p>}
               <button className="br-primary br-wide" disabled={!canConfirm(proposals)} onClick={publish}><Check size={16}/> Confirm {proposals.length} notes</button><button className="br-text-button" onClick={() => { setStage('capture'); setMode('paste'); setProposals([]); }}>Back to transcript</button>
             </>}
-          </> : view === 'progress' ? <ProgressPanel step={timelineStep} selected={selected} onSelect={select} onClose={() => { if (selected) setSelected(null); else setDetails(false); }}/> : <>
-            <div className="br-panel-title"><div><span className="br-eyebrow">{selected ? 'REGION RECORD' : 'LATEST REPORT'}</span><h2>{selected ? locations[selected].label : 'Latest consultation'}</h2></div><button aria-label="Close record details" onClick={() => { if (expanded) setDetails(false); else if (selected) setSelected(null); else setDetails(false); }}><X size={17}/></button></div>
-            {selected ? <><p className="br-subtle">Broad body region · Left side</p><div className="br-measurement"><span>MEASUREMENTS</span><p>No strength measurements recorded at this consultation.</p></div><h3>From your coach</h3>{currentAnnotations.length ? currentAnnotations.map(item => <article className="br-note" key={item.id}><span className="br-badge">{item.id.startsWith('baseline-') ? 'CONSULTATION NOTE' : 'REVIEWED NOTE'}</span><p>{item.text}</p><small>Stephen · {item.date ?? 'Today'}</small><details className="br-source"><summary>View source words</summary><p>“{item.source}”</p></details></article>) : <p className="br-empty">No consultation notes for this region yet.</p>}
-              <div className="br-section-title"><h3>Your observations</h3><button ref={observationButton} aria-label="Add observation" onClick={() => setEditing({ id: null, region: selected, text: '' })}><Plus size={17}/></button></div>{observations.filter(item => item.region === selected).map(item => <article className="br-note br-client-note" key={item.id}><span className="br-badge">YOU NOTICED</span><p className="br-exact-text">{item.text}</p><small>Alex · {item.date}</small><div className="br-actions"><button onClick={() => setEditing({ ...item })}>Edit</button><button onClick={() => { setObservations(items => items.filter(p => p.id !== item.id)); setNotice('Observation deleted.'); }}>Delete</button></div></article>)}{!observations.some(item => item.region === selected) && <p className="br-empty">Something you noticed between sessions? Keep it here, in your own words.</p>}<button className="br-outline br-wide" onClick={() => setEditing({ id: null, region: selected, text: '' })}>Add an observation</button><button className="br-text-button" onClick={() => setSelected(null)}>← Back to latest report</button>
-            </> : <><p className="br-subtle">Stephen · {consultation.date}</p><p className="br-report-intro">{consultation.summary}</p><div className="br-follow-up"><span className="br-eyebrow">NEXT REVIEW · {consultation.nextReview}</span><p>{consultation.followUp}</p></div>{published && <p className="br-info">New consultation notes added today. Select a region below to read them.</p>}<h3>Explore your record</h3>{(Object.keys(locations) as Region[]).map((region, index) => <button key={region} className="br-region-row" onClick={() => select(region)}><span className="br-region-number">0{index + 1}</span><span><strong>{locations[region].label}</strong><small>{confirmed.filter(item => item.region === region).length} coach notes · {observations.filter(item => item.region === region).length} observations</small></span><ArrowRight size={17}/></button>)}<div className="br-info"><strong>Between sessions</strong><p>Notice something new? Select the area on your body and add an observation for your next review.</p><small>{observations.length} observations in your record</small></div></>}
+          </> : <>
+            <div className="br-panel-title"><div><span className="br-eyebrow">{selected ? 'REGION RECORD' : 'LATEST REPORT'}</span><h2>{selected ? locations[selected].label : 'Latest consultation'}</h2>{!atLatest && <span className="br-as-of">As of {formatDate(scrubbedDate, true)} · <button className="br-as-of-reset" onClick={() => scrub(LAST)}>Show latest</button></span>}</div><button aria-label="Close record details" onClick={() => { if (expanded) setDetails(false); else if (selected) setSelected(null); else setDetails(false); }}><X size={17}/></button></div>
+            {selected ? <><p className="br-subtle">Broad body region · Left side</p>
+              <ChangeCard region={selected} date={scrubbedDate} isolate={isolate} onIsolate={setIsolate}/>
+              <h3>From your coach</h3>{regionAnnotations.length ? regionAnnotations.map(item => <article className="br-note" key={item.id}><span className="br-badge">{item.id.startsWith('baseline-') ? 'CONSULTATION NOTE' : 'REVIEWED NOTE'}</span><p>{item.text}</p><small>Stephen · {noteDate(item)}</small><details className="br-source"><summary>View source words</summary><p>“{item.source}”</p></details></article>) : <p className="br-empty">{atLatest ? 'No consultation notes for this region yet.' : `No consultation notes for this region by ${formatDate(scrubbedDate)}.`}</p>}
+              <div className="br-measurement"><span>MEASUREMENTS</span><p>No strength measurements recorded at this consultation.</p></div>
+              <div className="br-section-title"><h3>Your observations</h3><button ref={observationButton} aria-label="Add observation" onClick={() => setEditing({ id: null, region: selected, text: '' })}><Plus size={17}/></button></div>{regionObservations.map(item => <article className="br-note br-client-note" key={item.id}><span className="br-badge">YOU NOTICED</span><p className="br-exact-text">{item.text}</p><small>Alex · {formatDate(item.date, true)}</small><div className="br-actions"><button onClick={() => setEditing({ ...item })}>Edit</button><button onClick={() => { setObservations(items => items.filter(p => p.id !== item.id)); setNotice('Observation deleted.'); }}>Delete</button></div></article>)}{!regionObservations.length && <p className="br-empty">{atLatest ? 'Something you noticed between sessions? Keep it here, in your own words.' : `No observations for this region by ${formatDate(scrubbedDate)}.`}</p>}<button className="br-outline br-wide" onClick={() => setEditing({ id: null, region: selected, text: '' })}>Add an observation</button><button className="br-text-button" onClick={() => setSelected(null)}>← Back to latest report</button>
+            </> : <><p className="br-subtle">Stephen · {formatDate(consultation.date, true)}</p><p className="br-report-intro">{consultation.summary}</p><div className="br-follow-up"><span className="br-eyebrow">NEXT REVIEW · {formatDate(consultation.nextReview, true)}</span><p>{consultation.followUp}</p></div>{published && <p className="br-info">New consultation notes added today. Select a region below to read them.</p>}
+              <h3>Explore your record</h3>{regions.map((region, index) => { const status = statusAt(region, scrubbedDate); return <button key={region} className="br-region-row" onClick={() => select(region)}><span className="br-region-number">0{index + 1}</span><span><strong>{locations[region].label}</strong><small>{annotationsAsOf(confirmed.filter(item => item.region === region), scrubbedDate).length} coach notes · {observationsAsOf(observations.filter(item => item.region === region), scrubbedDate).length} observations</small></span><span className={`br-status-dot ${status}`}>{statusLabel[status]}</span><ArrowRight size={17}/></button>; })}
+              <div className="br-legend" aria-label="Colour key">{legend.map(status => <span key={status} className={`br-status-dot ${status}`}>{statusLabel[status]}</span>)}<small>Colours compare Alex’s two most recent check-ins as of {formatDate(scrubbedDate)}.</small></div>
+              <div className="br-info"><strong>Between sessions</strong><p>Notice something new? Select the area on your body and add an observation for your next review.</p><small>{observations.length} observations in your record</small></div></>}
           </>}
         </aside>}
       </div>
       {compact && <div className="br-hero-record-summary">
-        <div><span className="br-eyebrow">{view === 'progress' ? 'EXPLORE THE CHANGE' : 'LATEST CONSULTATION · 7 SEP'}</span><span>{confirmed.length} coach notes · {observations.length} observations</span></div>
-        <div className="br-hero-regions">{(Object.keys(locations) as Region[]).map(region => <button key={region} onClick={() => select(region)}>{locations[region].label}<ArrowRight size={14}/></button>)}</div>
+        <div><span className="br-eyebrow">LATEST CONSULTATION · {formatDate(consultation.date).toUpperCase()}</span><span>{confirmed.length} coach notes · {observations.length} observations</span></div>
+        <p className="br-hero-summary-text">{consultation.summary}</p>
+        <div className="br-hero-regions">{regions.map(region => { const status = statusAt(region, scrubbedDate); return <button key={region} onClick={() => select(region)}><span>{locations[region].label}<small className={`br-status-dot ${status}`}>{statusLabel[status]}</small></span><ArrowRight size={14}/></button>; })}</div>
+        <div className="br-hero-next"><span className="br-eyebrow">NEXT REVIEW · {formatDate(consultation.nextReview).toUpperCase()}</span><span>{consultation.followUp}</span></div>
         <small>Demo data · Changes last until you leave Today or refresh</small>
       </div>}
       {notice && <div className="br-notice" role="status">{notice}<button aria-label="Dismiss notification" onClick={() => setNotice('')}><X size={14}/></button></div>}
     </div>
-    {(editing || resetting) && <div className="br-modal-backdrop"><div className="br-modal" ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="br-modal-title">{editing ? <><div className="br-panel-title"><h2 id="br-modal-title">What did you notice?</h2><button aria-label="Cancel observation" onClick={closeObservation}><X size={18}/></button></div><p>Your words, attached to a place. This won’t send a message to your coach.</p>{locationSelect(editing.region, region => { if (region) setEditing({ ...editing, region }); }, 'Location')}<label className="br-field">Observation<textarea autoFocus rows={5} value={editing.text} onChange={event => setEditing({ ...editing, text: event.target.value })} placeholder="For example: I noticed this after working at my desk…"/></label><small>Today · Saved for this visit only</small><div className="br-actions"><button onClick={closeObservation}>Cancel</button><button className="br-primary" disabled={!editing.text.trim()} onClick={() => { const entry: Observation = { id: editing.id ?? crypto.randomUUID(), text: editing.text, region: editing.region, date: new Date().toLocaleDateString('en-GB') }; setObservations(items => [...items.filter(item => item.id !== entry.id), entry]); select(entry.region); closeObservation(); setNotice('Observation saved for this visit.'); }}>Save observation</button></div></> : <><h2 id="br-modal-title">Reset this walkthrough?</h2><p>This removes sample updates and observations from this visit. Kingsley’s other prototype records are unchanged.</p><div className="br-actions"><button onClick={() => setResetting(false)}>Keep exploring</button><button className="br-primary" onClick={reset}>Reset demo</button></div></>}</div></div>}
+    {(editing || resetting) && <div className="br-modal-backdrop"><div className="br-modal" ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="br-modal-title">{editing ? <><div className="br-panel-title"><h2 id="br-modal-title">What did you notice?</h2><button aria-label="Cancel observation" onClick={closeObservation}><X size={18}/></button></div><p>Your words, attached to a place. This won’t send a message to your coach.</p>{locationSelect(editing.region, region => { if (region) setEditing({ ...editing, region }); }, 'Location')}<label className="br-field">Observation<textarea autoFocus rows={5} value={editing.text} onChange={event => setEditing({ ...editing, text: event.target.value })} placeholder="For example: I noticed this after working at my desk…"/></label><small>{formatDate(latestDate, true)} · Saved for this visit only</small><div className="br-actions"><button onClick={closeObservation}>Cancel</button><button className="br-primary" disabled={!editing.text.trim()} onClick={() => { const existing = observations.find(item => item.id === editing.id); const entry: Observation = { id: editing.id ?? crypto.randomUUID(), text: editing.text, region: editing.region, date: existing?.date ?? latestDate }; setObservations(items => [...items.filter(item => item.id !== entry.id), entry]); if (!existing) scrub(LAST); select(entry.region); closeObservation(); setNotice('Observation saved for this visit.'); }}>Save observation</button></div></> : <><h2 id="br-modal-title">Reset this walkthrough?</h2><p>This removes sample updates and observations from this visit. Kingsley’s other prototype records are unchanged.</p><div className="br-actions"><button onClick={() => setResetting(false)}>Keep exploring</button><button className="br-primary" onClick={reset}>Reset demo</button></div></>}</div></div>}
   </section>;
 }
