@@ -43,6 +43,8 @@ The build needs a shared contract that product, engineering, interface, and pitc
 
 ## Implementation notes
 
+The user locked product scope and stack on 2026-09-12. Do not reopen those choices merely because this ticket is pending. Remaining work is to incorporate spike evidence, produce implementation tickets and confirm the schedule fits actual time remaining.
+
 If estimates do not fit, remove steps or integrations before creating build tickets. Preserve the environmental claim, meaningful agent reasoning, and human-control moment.
 
 ## Validation

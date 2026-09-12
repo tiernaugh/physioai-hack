@@ -1,18 +1,16 @@
 # Risks and Open Questions
-Status: Draft
+Status: Active — scope chosen; evidence pending
 
-| Risk | Response |
+| Risk | Required response |
 |---|---|
-| New viewer is mistaken for theme alignment by itself | Demonstrate shared spatial context and agent-driven record updates |
-| 3D integration consumes the build | Spike load, select, focus and annotate before adding features |
-| Model maps a movement test to a specific muscle | Use broad validated regions; avoid unsupported precision |
-| Reference anatomy appears personally measured | Explain it is a reference map containing personal records |
-| Coach narrative is treated as measured data | Preserve content type and provenance |
-| Pain note triggers invented diagnosis | Save the client's observation without diagnostic inference |
-| Tour becomes a scripted animation | Show live source-backed mapping; disclose any seeded tour order |
-| Source fixture exposes personal details | Use fictional identity and de-identified material |
-| App adoption is assumed | Describe the client workflow as a hypothesis supported by limited interviews |
+| Microphone/transcription adds new integration | Spike short recording on actual device first; explicit transcript fallback |
+| 3D refactor becomes a rebuild | Time-box vendoring; prove two region IDs and camera focus |
+| Selection is stale or speech points elsewhere | Preserve time and source; ask for review rather than silently assigning |
+| Atlas mesh suggests unsupported precision | Broad product regions; no muscle diagnosis inferred from joint tests |
+| Reference anatomy presented as digital twin | Explain reference geometry with personal records; no physical simulation |
+| Prototype recovery colours look measured | Remove invented percentages from final flow |
+| Mode switch mistaken for auth | Fictional single-client demo only |
+| Scope grows to two products | Coach capture/review is one mode; client explorer remains central |
+| Expensive time assumptions | Establish actual remaining build window before estimating tickets |
 
-T-002 validates the interaction's contextual advantage. T-003 proves the viewer-to-record boundary. Model choice, region mapping and persistence remain technical decisions.
-
-Incoming updates must not overwrite prior measurements or imply clinical change. A simulated delivery event does not prove an external integration. Evaluate theme alignment on source-backed mapping, shared spatial state and actual record updates.
+Unresolved implementation details: exact package/model versions, upstream commit, verified region IDs, browser recording format, transcription time offsets and target-device performance. None changes the selected product scope. T-003 must provide executable evidence before reliability is claimed.

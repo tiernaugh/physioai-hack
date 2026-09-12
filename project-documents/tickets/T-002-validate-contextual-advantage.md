@@ -43,6 +43,8 @@ This is the central hackathon-theme claim and the main defence against building 
 
 ## Implementation notes
 
+Latest scope: a recorded coach session supplies context directly; reviewed updates enter the client's body explorer. Test this connection instead of relying solely on simulated incoming messages. Live capture is in P0, continuous streaming is not.
+
 Current concept: client body explorer. Demonstrate that region selection and assessment state inform the agent, and that its action updates the same visual record. A new 3D interface alone does not establish theme alignment. Use `../concept/08-demo-story.md` to test the narrative.
 
 Convenience can support the value proposition, but should not be its entire basis. Stronger advantages include continuity across time, shared participants, real-world timing, direct action, multimodal observation, and scoped authority.

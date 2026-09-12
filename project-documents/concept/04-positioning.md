@@ -1,26 +1,21 @@
 # Positioning
-Status: Decided
+Status: Decided — 2026-09-12
 
-Working line: “Your assessment, attached to the places it describes.”
+Working line: “The explanation stays with your body.”
 
-## Narrative tension
-During a consultation, explanation has context: a movement, a body part, a demonstration. Afterward the client may have numbers in a report and only a partial memory of the conversation. The opportunity is to make that context retrievable through the body itself.
+## Tension
+In a consultation, meaning comes from words, pointing and measurements together. Afterward, a client may have the report but struggle to reconstruct the explanation. The founder's experience and one coach interview motivate this hypothesis.
 
-## Evidence
-One coach described manually assembling reports and delivering them through WhatsApp or email. The founder described wanting to revisit their coach's explanation. Do not claim measured retention, time savings or clinical benefit.
+## Proposition
+Record the coach's explanation during the session and turn it into reviewed, source-backed updates on an explorable body. The client can revisit and add their experience there.
 
-## Why an embedded agent?
-It knows which region and assessment the client is exploring and can change the view, retrieve the corresponding evidence and attach an observation there. A standalone assistant would need the client to restate that context and transfer the result.
+## Why an agent here?
+The agent receives session context while the explanation happens, including which region is being discussed or selected. It returns reviewed updates into the same body record. Later, client selection supplies spatial context for retrieval and note capture.
 
-This new interface does not automatically satisfy “where people already work.” Theme alignment must be earned through shared spatial state and meaningful actions; it is weaker if the result is merely a viewer beside a chatbot.
-
-## Alternatives
-Static report: preserves output but requires finding and interpreting the relevant passage.
-Generic anatomy explorer: supports navigation but lacks the client's assessment context.
-Chat assistant: can explain supplied material but lacks shared body-selection state unless integrated.
+The new app is not yet an established place clients work. Theme alignment depends on this actual capture-to-record loop, not a 3D viewer alone.
 
 ## Wider vision
-A body record that develops across assessments and client observations. Historical comparison and an integrated coach workspace are future work. One simulated coach-note delivery and a real regional record update are in the demo.
+A personal record across recovery and performance. Practice purchase and improved understanding are hypotheses. No quantified retention, clinical outcome or time-saving claim is established.
 
-## Demonstrated continuity
-The demo starts with an existing record, then adds one sourced coach update and one client observation. The agent recognizes where the new context belongs and updates that place without requiring the client to reconstruct the assessment. This is the central agent behaviour; exploration is the user benefit.
+## Deliberate exclusions
+Exercise planning, workout logging, coach ratings, diagnosis and automatic performance prescriptions. Existing coaching plans continue outside this product.

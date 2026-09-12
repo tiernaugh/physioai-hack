@@ -1,20 +1,21 @@
 # Users and Environment
-Status: Decided
+Status: Decided — 2026-09-12
 
-## Primary user
-A gym or physiotherapy client revisiting an assessment and trying to understand what was discussed. The coach supplies findings and interpretation; a separate coach UI is outside this build.
+## People
+Primary user: the client exploring their assessment and observations.
+Contributor and proposed buyer: coach/physio, represented by Stephen in the demo.
+Demo identity: fictional client; clinician/client mode switching is a demonstration convenience, not authentication.
 
 ## Environment
-A new client-facing body explorer used during or after the consultation. It is not an existing product already adopted by clients. The agent shares its selected region, active assessment, source material and saved observations.
+One body-first web application shared during the consultation and revisited afterward. Coach session mode captures speech and timestamped selection context while the explanation happens. Client mode exposes the resulting regional record.
 
-Human Atlas is the interaction reference: https://github.com/ashemag/human-atlas
-Its reference anatomy provides navigation; personal records provide personalization. Do not claim the geometry is a scan or a model of the client's actual anatomy.
+## Session interaction
+With client agreement, Stephen chooses Start session. A visible timer, recording state and stop/discard controls remain available. Processing starts when the recording stops. No continuous transcription or automatic live intervention is claimed.
 
-## Triggers
-A new coach note arrives while the client has an existing body record open. The agent uses the current assessment and note content to place a sourced update at the relevant region. The demo operator triggers a labelled incoming-note fixture; no live coach messaging integration is implied. “Show update” focuses that region. Region selection supplies context for explanation and client note capture.
+Region selection is optional contextual evidence. Capture its timestamp; do not label an entire recording with whichever region was selected last. Spoken anatomy/laterality can override a stale selection only through a reviewed proposal; conflicting or ambiguous evidence is flagged for review.
 
-## Human control
-The client controls navigation, can stop the tour, inspect sources and preview/edit/delete their own note. Generated explanations stay distinct from coach-authored statements. No invented coach approval or clinical verification.
+## Client interaction
+New confirmed updates have source, author and date. Show update focuses the relevant region. The client controls rotation, selection and guided exploration, and confirms/edits/deletes their own observations.
 
 ## Surrounding journeys
-Baseline, focused hamstring assessment, shoulder assessment, knee reassessment and ankle review can be named as future product contexts. They are not implemented clinical protocols. Return-to-sport decisions remain with the practitioner.
+Baseline, recovery review and performance discussion are useful labels. A hamstring history and golf goal may illustrate continuity without generated exercise plans or claims of biomechanical prediction.

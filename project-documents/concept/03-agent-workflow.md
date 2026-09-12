@@ -1,27 +1,25 @@
 # Agent Workflow
-Status: Decided
+Status: Decided — 2026-09-12
 
-1. Client opens an existing fictional body record populated from a prepared assessment.
-2. A labelled incoming-coach-note fixture triggers processing. The agent derives the region mapping from the note and existing assessment; the trigger must not hide a hardcoded target.
-3. Agent proposes a source-backed mapping to an allowed region. Code validates region IDs, laterality and evidence references; unsupported mappings remain unplaced.
-4. The application appends the note to the regional record and marks it unread: “Your coach added an update here.” Existing evidence remains intact.
-5. Client chooses “Show update.” The application focuses that region, shows the explanation and source, and marks it read when opened. Client can continue exploring or stop navigation.
-6. Client selects a region and adds a text observation.
-7. Agent proposes a record entry using the selected location, current assessment and the client's exact words.
-8. Client confirms; the application saves a dated, editable note at that region.
+1. Open the fictional client's existing body record with prepared assessment data.
+2. Enter coach session mode, confirm capture agreement and start recording.
+3. Capture audio plus timed region selections while Stephen explains findings.
+4. Finish recording; transcribe server-side and retain transcript source spans.
+5. Agent proposes observations against a small region allowlist, using the transcript, existing assessment and time-aligned selection context where available.
+6. Validate region IDs, source references and numerical claims. Preserve uncertain findings as unplaced/review-needed.
+7. Stephen reviews short proposed updates, correcting or removing any item. Confirm publishes the current revision to the client's body record.
+8. Client sees new markers; Show update focuses the region and opens its evidence.
+9. Client adds an observation at the selected region, previews it and saves it. The note remains a client report, not a diagnosis.
 
-## Evidence contract
-Each annotation contains region, side if known, assessment ID, source reference, content type and text. Content types distinguish measurement, coach statement, generated explanation and client observation.
+## Allowed agent actions
+Propose annotation; focus region; retrieve source; prepare a region-bound observation. Only explicit confirmation publishes coach updates or saves client notes. Agent output cannot execute arbitrary viewer code.
 
-Incoming updates also carry event ID, author, source timestamp and read/unread state. These are record updates, not claims that the client's measured condition has changed. Retain earlier measurements unchanged unless new measurement evidence arrives. Replaying an event ID must not duplicate an update.
+## Evidence
+Distinguish measurements, coach statements, generated explanation and client observations. Movement-test results map to broad joint regions, not assumed individual muscle injury. Preserve unknown laterality.
 
-An elbow-flexion test is movement-level evidence: it must not become a diagnosis of a particular muscle. Unspecified ankle laterality stays unspecified.
+## States
+Idle → recording → transcribing → extracting → review → confirmed.
+Client updates: unread → opened. Editing a draft invalidates earlier confirmation.
 
-## Actions
-Map finding, focus region, open source, draft observation and save confirmed observation. Navigation cannot silently save or send data.
-
-## Calculations
-If displayed, calculate asymmetry in code: abs(right-left)/max(right,left) × 100. The supplied elbow values yield 20.8%. Report thresholds are source-specific, not general standards.
-
-## Failures
-Missing evidence produces “No assessment information here.” Invalid model output cannot annotate arbitrary structures. Preserve exact client wording. Model failure allows retry without invented explanations. Reprocessing the same assessment must not duplicate notes.
+## Reliability
+Deduplicate by source event/session revision, not assessment alone: several sessions may update one assessment. Never overwrite old measurements with narrative notes. Keep exact source wording; compute asymmetry in code. Audio/model failure retains the session and offers retry or clearly labelled transcript input. Storage failure leaves the draft unsaved and visible.

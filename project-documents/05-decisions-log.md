@@ -17,9 +17,26 @@ Record decisions that materially affect product scope, interaction design, archi
 
 ## Current decisions
 
+### 2026-09-12 — Publish implementation handoff documents
+
+- **Status:** Decided
+- **Decision:** Use `handoff/prd.md` for detailed acceptance criteria, `adrs/` for architectural rationale and `handoff/technical-contracts.md` for proposed implementation interfaces.
+- **Reason:** Give Stephen and the team a reviewable starting point with explicit decisions, assumptions and verification gaps.
+- **Consequences:** Concept summaries and tickets link to these contracts; changes must be synchronized. Accepted ADRs do not imply completed technical validation.
+- **Owner:** Team
+
+### 2026-09-12 — Lock recorded-session capture and client body record
+
+- **Status:** Decided
+- **Decision:** Use Next.js App Router, vendored Human Atlas, CopilotKit, OpenAI transcription/structured extraction and localStorage. Add a small Start/Finish session mode: record, extract, coach review, confirm, client exploration and client note.
+- **Reason:** User accepted the reviewed stack and session interaction and asked to lock the brief for work planning.
+- **Consequences:** Live short recording is P0; transcript input is fallback. No exercise planning, recovery percentages, hardware/WhatsApp integration or separate coach dashboard. T-003 still must prove the integration; T-004 still must create estimated implementation tickets.
+- **Corrections to earlier proposal:** Upstream callbacks do not prove our integration. Localhost geometry on the presentation laptop does not depend on venue Wi-Fi. Deduplicate source events, not entire assessments.
+- **Owner:** Team
+
 ### 2026-09-12 — Transplant the Human Atlas renderer; Next.js + CopilotKit + OpenAI stack
 
-- **Status:** Proposed — pending CTO review
+- **Status:** Superseded by locked stack and session-capture decision above; retained as proposal history
 - **Decision:** Vendor Human Atlas's renderer (`scene.tsx` + four sibling files) and packaged BodyParts3D geometry into our own Next.js App Router app as `src/atlas/`, rather than forking the repo or rebuilding a viewer. Use CopilotKit for agent ↔ UI shared state and actions, OpenAI structured outputs with a region-allowlist enum for extraction, `localStorage` for notes, and `localhost` for the demo. Skip Auth0, Trigger.dev, Exa, Ambiguous AI and Cloud Run in P0.
 - **Reason:** Reading the upstream source (2026-09-12) shows `scene.tsx` depends only on `react`, `three` and sibling files, the build config is plain Vite, and an agent-drives-viewer tool layer already exists upstream. The agent-to-viewer integration T-003 was written to test is therefore already proven; the remaining risk is the 33 MB geometry payload on venue wifi and the CopilotKit shared-state wrapper. Two load-bearing sponsor integrations map directly to required behaviour; the rest are non-goals or belong to the superseded coach-first concept.
 - **Alternatives considered:** Fork wholesale (fast, but inherits a 102 MB repo, unused beta toolchain and a UI we rewrite anyway; weak provenance for judges). Rebuild from scratch (the packaged geometry is the expensive part; pointless). Vite + separate Node runtime for CopilotKit (viable; two processes for no gain).

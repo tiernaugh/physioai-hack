@@ -4,6 +4,8 @@ This directory is the project's shared source of truth.
 
 ## Start here
 
+For implementation review, start with the [build handoff](handoff/README.md), [PRD](handoff/prd.md) and [ADRs](adrs/README.md).
+
 1. [`01-hackathon-brief.md`](01-hackathon-brief.md) — challenge, judging criteria, constraints, and working principles.
 2. [`02-sponsor-capabilities.md`](02-sponsor-capabilities.md) — capability-oriented summary of the sponsor stack.
 3. [`03-idea-exploration.md`](03-idea-exploration.md) — candidate ideas and early thinking before selection.

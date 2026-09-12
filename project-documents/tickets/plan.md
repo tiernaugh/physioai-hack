@@ -5,7 +5,9 @@ Last updated: 2026-09-12
 
 ## Current objective
 
-Validate the client body record's incoming-update loop: an existing assessment receives a coach note, the agent maps it to a region, and the client explores and adds an observation in place. The accepted brief and pitch are in `../concept/`.
+Review entry point: [handoff](../handoff/README.md). Build acceptance criteria: [PRD](../handoff/prd.md). Implementation boundaries: [technical contracts](../handoff/technical-contracts.md).
+
+Product and stack are locked. Validate the recorded-session-to-body-update path, then break implementation into estimated tickets. See `../concept/`. The earlier simulated incoming-note path is now the transcript fallback.
 
 ## Feature-complete means
 
@@ -76,9 +78,20 @@ Passed: user accepted capture of the brief in the concept folder. See the decisi
 
 ## Next action
 
-**CTO review of the proposed stack** in [`../concept/05-technical-architecture.md`](../concept/05-technical-architecture.md) (transplant Human Atlas renderer into Next.js; CopilotKit + OpenAI structured outputs; `localStorage`; `localhost`). Open questions for review are listed at the end of that document. Once confirmed, [T-003](T-003-prove-critical-integration.md) runs as re-scoped: transplant (30-minute time-box), cold load on the demo device, CopilotKit wrapping `SceneState`, allowlist concept IDs. [T-002](T-002-validate-contextual-advantage.md) can run in parallel from the storyboard. Neither validation is complete.
+Run [T-003](T-003-prove-critical-integration.md) against the chosen stack: Next.js viewer, short recording/transcription, sourced region extraction, coach confirmation and one agent-triggered focus action. [T-002](T-002-validate-contextual-advantage.md) evaluates the session capture and client exploration story. Neither is complete.
 
 Product-track prerequisite for both: hand-author the movement → region allowlist and agree the `Annotation` shape (starter versions in the architecture doc).
+
+## Implementation decomposition after the spike
+
+1. Preserve exploration; establish Next.js shell, pinned dependencies and viewer adapter.
+2. Implement session recording, source events and transcription.
+3. Add validated extraction and coach review/confirmation.
+4. Connect confirmed updates to body focus, evidence panel and unread state.
+5. Add client observation persistence and edit/delete.
+6. Rehearse, reset, exercise failure paths and record the two-minute demo.
+
+These are planning boundaries, not completed tickets. Product/stack lock does not mean the technical gate passed. T-004 remains open for validated estimates and ticket creation. Recalculate the remaining time before assigning work; historical schedule times are not a current deadline estimate.
 
 ## Stretch queue
 

@@ -1,23 +1,24 @@
-# Concept Proposition
-Status: Decided — revised 2026-09-12
+# Locked Product Brief
+Status: Decided — 2026-09-12
+Implementation status: not yet validated
 
-Give clients an explorable body record that brings measurements, their coach's explanations and their own observations together in the places they relate to.
+## Proposition
+A client-facing body record that connects assessment measurements, coach explanations and client observations to the relevant places on a 3D reference body.
 
-The client is the primary user. The body is the main navigation. An embedded agent maps incoming assessment context onto that record, guides exploration and saves client observations against the selected location.
+Client benefit: understand and revisit what was discussed, and see the record develop over time.
+Buyer hypothesis: a gym, coach or physiotherapy practice provides it as part of its service. This is a hypothesis from the team discussion, not validated willingness to pay.
 
-## Problem
-The interviewed coach assembles reports using measurements, Claude and personal interpretation, then sends them through WhatsApp or email. The founder described difficulty recalling an explanation of how findings related to their body. These are two sources of directional evidence, not proof that all clients experience the problem.
+## Golden path
+Stephen opens a client record → starts a session recording → explains findings while optionally selecting regions → finishes → agent transcribes, extracts and proposes sourced region updates → Stephen reviews and confirms → client explores the new annotations and adds an observation in place.
 
-## Core loop
-An existing body record is open → a new coach note arrives → agent links it to the relevant region and existing assessment → “Your coach added an update here” appears → client explores the evidence and adds an observation → the same regional record updates.
+## Scope decision
+The client explorer remains the primary experience. Coach session mode is a small capture/review flow in the same app, not a separate dashboard. The incoming update now comes from this session; a prepared transcript is the labelled fallback.
 
-Agent story: “My body record updates as my care continues.” User benefit: “I can explore and understand it.” Demonstrate continuity with one incoming update, not a historical analytics system.
+## Surrounding stories
+Recovery and performance are two lenses on the same record. A past hamstring episode or golf goal may be seeded context. Neither creates a second working product flow. A simple dated list makes continuity visible; analytics and workout planning are outside P0.
 
-## Smallest build
-One client-facing body explorer, one prepared report and consultation transcript, two or three annotations, one guided walkthrough and one persistent client note.
+## Language
+“Digital twin” is team shorthand for the vision. Describe the demo as a personal body record on reference anatomy. Geometry is not a scan, and colours must not imply measured tissue healing. Do not invent a body score or recovery percentage.
 
-## Memorable moment
-A consultation becomes a navigable body record. The client selects a region to recover the relevant explanation, then adds “This felt uncomfortable during training today” directly to that location.
-
-## Non-goals
-Coach dashboard, contradiction demo, live hardware feed, continuous listening, diagnosis, automatic programmes and longitudinal analytics. This revision supersedes the coach-first assessment-room brief.
+## Success
+A real recording produces real, source-backed annotations after coach review; the client can inspect and contribute to the same record. The existing prototype is exploratory reference, not an implementation specification.

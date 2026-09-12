@@ -6,4 +6,6 @@ Sensitive source material should be anonymized before it is added to the reposit
 
 Current sources:
 
+- [Kingsley's UI reference notes](2026-09-12-kingsley-ui-reference.md)
+
 - [`2026-09-12-strength-assessment-report.md`](2026-09-12-strength-assessment-report.md)

@@ -1,51 +1,29 @@
 # Demo and Pitch
-Status: Draft — client-first narrative
+Status: Locked narrative — timings subject to rehearsal
 
 ## Promise
-Your assessment, attached to the places it describes.
+The explanation stays with your body.
 
-## Two-minute script and staging
+| Time | Story | Visible proof |
+|---|---|---|
+| 0:00–0:15 | “In an assessment, your coach explains your body by talking and pointing. Later, you have the report—but want to revisit the explanation.” | Brief report glimpse, then body record |
+| 0:15–0:30 | “We spoke to a gym owner who assembles reports and sends them to clients. We wanted the conversation to stay attached to what it describes.” | Existing fictional client record |
+| 0:30–0:55 | “Stephen starts a session and records his explanation as usual.” | Start, short spoken demo note, optional region selection, Finish |
+| 0:55–1:15 | “The agent turns that into sourced updates. Stephen checks what will be added.” | Real transcription/extraction, short review, Confirm |
+| 1:15–1:40 | “The client can now explore what was discussed, right here.” | New region markers; Show update focuses body and opens source |
+| 1:40–1:55 | “And add their own experience between sessions.” | Client note preview/save at selected region |
+| 1:55–2:00 | “The explanation stays with your body.” | Updated record |
 
-### 0:00–0:20 — Tension
-Show a de-identified report, then move quickly into the product.
+## Tension and payoff
+The tension is losing the connection between words, measurements and location. The solution captures context while the conversation happens. The payoff is a client who can revisit and contribute to the same record.
 
-“You leave an assessment with a report full of numbers. Your coach explained what they meant, pointing to different parts of your body. Later, you want to revisit one thing—and you're piecing the explanation back together.”
+The central reveal is real speech becoming reviewed body annotations. A beautiful viewer supports that moment. Do not spend the demo showing routines or hypothetical golf analysis.
 
-This is a scenario informed by the founder's experience, not a universal research finding.
+## Evidence and disclosures
+Single coach interview plus founder experience, not broad validation. Existing measurements/history are seeded and identity fictional. Live recording, extraction, review, navigation and saving must actually run. Reference anatomy is not a personal scan. No unmeasured improvement percentages or clinical outcomes.
 
-### 0:20–0:35 — Evidence and proposition
-“We spoke to a gym owner today. He combines measurement data with his own interpretation and sends the report through WhatsApp or email. We asked: what if that explanation lived on the body it describes?”
+## Rehearsal
+Use a 20–30-second explicitly anatomical script from the scope document. Preload geometry; measure model latency. If processing takes longer, use that interval to explain coach review rather than pretending results are instantaneous. Have a labelled transcript and recorded-video fallback.
 
-### 0:35–0:55 — Reveal
-“This is a client's existing body record. Now a new note arrives from their coach. The agent connects it to the relevant assessment and body region.”
-
-Show the existing annotations first. Trigger a clearly labelled incoming-note fixture, then show the resulting region marker: “Your coach added an update here.” Delivery is simulated; source-to-region mapping and the record update must run.
-
-### 0:55–1:20 — Explore
-“Choose ‘Show update’: the view takes me to the elbow. Here are my existing measurements, my coach's new note, and the explanation with its source.”
-
-Show a region focus and evidence panel. Use source-specific wording; do not suggest that the anatomy was reconstructed from the readings.
-
-### 1:20–1:40 — Participation
-“Between sessions, I can point to a place and add what I've noticed.”
-
-Select region, enter “This felt uncomfortable during training today,” preview and confirm.
-“The note stays attached here, ready for my next conversation.”
-
-### 1:40–1:55 — Why the agent belongs
-“When new context arrives, the agent knows which assessment and body region it belongs to. I can explore that update and add my own experience in the same place.”
-
-### 1:55–2:00 — Close
-“A body record that keeps the conversation together.”
-
-## What makes the story work
-The tension is context becoming scattered between consultations. The reveal is an existing body record responding to a new coach note. The payoff is the client adding their experience to the same place. Agent story: “My body record updates as my care continues.” User benefit: “I can explore and understand it.”
-
-## Demo checklist
-Prepare one fictional identity, existing assessment, two or three annotations, one incoming coach-note fixture and one client observation. Verify source mapping, unread/read transition, viewer focus, persistence, duplicate-event handling and reset. Preload the viewer. Keep a recorded backup labelled as a recording.
-
-## Claim boundaries
-No measured health benefit, continuous monitoring, hardware integration, clinician approval or personalized body geometry unless actually implemented. The supplied report is evidence about one workflow. Model output must not invent causes or prescriptions.
-
-## Submission description
-A client-facing body record that develops as new consultation context arrives. Its embedded agent connects coach updates to existing assessments and body regions, guides the client through the evidence and saves their observations in the same place.
+## Submission copy
+A client-facing body record that keeps assessment evidence and consultation explanations attached to relevant regions. A coach records a session, reviews the agent's proposed annotations and confirms them. Clients explore those updates and add observations directly to their body record.
