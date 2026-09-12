@@ -17,6 +17,32 @@ Record decisions that materially affect product scope, interaction design, archi
 
 ## Current decisions
 
+### 2026-09-12 — Demonstrate continuity through an incoming update
+
+- **Status:** Decided
+- **Decision:** Start the demo with an existing body record. A labelled coach-note fixture triggers agent mapping and a regional update; the client explores it and adds an observation there.
+- **Reason:** Show a natural event, shared context and an actual record change to strengthen theme alignment.
+- **Consequences:** Add event identity, source attribution, unread state and deduplication. Keep delivery simulated and mapping real. No external messaging integration or trend dashboard is required.
+- **Owner:** Team
+
+### 2026-09-12 — Centre the client body explorer
+
+- **Status:** Decided
+- **Decision:** Make the client the primary user and the body the main navigation. Map prepared assessment context to regions, guide exploration and save a client observation at a selected location.
+- **Reason:** The user explicitly redirected the concept toward understanding and viewing the body, with Human Atlas as inspiration.
+- **Alternatives considered:** Coach-first clarification and approval flow; retained as historical thinking only.
+- **Consequences:** The assessment-room brief below is superseded. Live audio, hardware feeds and a coach dashboard leave P0. Viewer integration, evidence mapping and note persistence become the critical path.
+- **Owner:** Team; documented by Codex following user confirmation.
+
+### 2026-09-12 — Select the assessment-room concept
+
+- **Status:** Superseded by the client body explorer
+- **Decision:** Capture the accepted ambient assessment-room brief in `concept/`: one baseline-session segment, elbow readings, spoken observation, clarification and coach approval.
+- **Reason:** The shared session provides active-test context and an opportunity to resolve disagreement while both people are present.
+- **Alternatives considered:** The full ecosystem is too broad; post-assessment messaging is a fallback with a weaker timing advantage.
+- **Consequences:** Hardware input is explicitly simulated. Technical validation and final build lock remain open. Other assessment purposes are illustrative future workflows.
+- **Owner:** Team; documented by Codex following user acceptance.
+
 ### 2026-09-12 — Separate project knowledge from implementation
 
 - **Status:** Decided

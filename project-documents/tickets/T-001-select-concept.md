@@ -1,8 +1,8 @@
 # T-001 — Select the hackathon concept
 
-- **Status:** Ready
+- **Status:** Done
 - **Priority:** P0
-- **Owner:** Unassigned
+- **Owner:** Codex (documenting the team's selection)
 - **Estimate:** 30 minutes
 - **Depends on:** None
 - **Blocks:** T-002, T-003
@@ -34,26 +34,26 @@ Implementation choices cannot be judged or scoped coherently until the team choo
 
 ## Acceptance criteria
 
-- [ ] One primary user and one concrete environment are named.
-- [ ] A natural trigger and context available in the environment are specified.
-- [ ] The agent's action and human-control point are observable.
-- [ ] The “why here instead of ChatGPT?” answer is concrete.
-- [ ] The smallest build and memorable demo moment fit the remaining time.
-- [ ] Finalists are scored and the selection is recorded in the decision log.
-- [ ] `../concept/01-proposition.md` and `../concept/02-users-and-environment.md` reflect the decision.
+- [x] One primary user and one concrete environment are named.
+- [x] A natural trigger and context available in the environment are specified.
+- [x] The agent's action and human-control point are observable.
+- [x] The “why here instead of ChatGPT?” answer is concrete.
+- [x] The smallest build and memorable demo moment fit the remaining time.
+- [x] Finalists are scored and the selection is recorded in the decision log.
+- [x] `../concept/01-proposition.md` and `../concept/02-users-and-environment.md` reflect the decision.
 
 ## Implementation notes
 
-The physical-assessment direction is an input, not a commitment. Reject or radically narrow it if the environmental advantage remains weak or the clinical inference risk dominates the demo.
+The team revised the selection to the client-facing body explorer. Current concept documents and the decision log supersede the assessment-room direction. Contextual advantage and integration reliability still require T-002 and T-003 validation.
 
 ## Validation
 
-- Review the selected concept against the eleven explicit questions in `../03-idea-exploration.md`.
+- Review the selected concept against the explicit questions in `../03-idea-exploration.md`.
 - Run the custom-GPT test and articulate what disappears outside the chosen environment.
 
 ## Completion record
 
-- **Completed:** Pending
-- **Result:** Pending
-- **Evidence:** Pending
-- **Deviations/follow-ups:** None
+- **Completed:** 2026-09-12
+- **Result:** Accepted brief captured across the concept documents.
+- **Evidence:** User requested capture of the proposed brief; concept files answer the selection questions; alternatives and provisional scores are retained in the scorecard; decision recorded.
+- **Deviations/follow-ups:** Feasibility is estimated, not proven. Validate through T-002/T-003 before build lock.

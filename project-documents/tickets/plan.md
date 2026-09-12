@@ -5,7 +5,7 @@ Last updated: 2026-09-12
 
 ## Current objective
 
-Select and validate one concept whose central value depends on its environment, then freeze a buildable golden path before scaffolding the application.
+Validate the client body record's incoming-update loop: an existing assessment receives a coach note, the agent maps it to a region, and the client explores and adds an observation in place. The accepted brief and pitch are in `../concept/`.
 
 ## Feature-complete means
 
@@ -21,9 +21,9 @@ Select and validate one concept whose central value depends on its environment, 
 
 | Seq. | Ticket | Outcome | Status | Owner | Depends on | Estimate |
 |---:|---|---|---|---|---|---:|
-| 1 | [T-001](T-001-select-concept.md) | Select the concept and environmental claim | Ready | Unassigned | — | 30m |
-| 2 | [T-002](T-002-validate-contextual-advantage.md) | Prove the environment materially changes the workflow | Proposed | Unassigned | T-001 | 20m |
-| 3 | [T-003](T-003-prove-critical-integration.md) | Retire the largest integration risk with a spike | Proposed | Unassigned | T-001 | 30m |
+| 1 | [T-001](T-001-select-concept.md) | Select the concept and environmental claim | Done | Team / Codex documentation | — | 30m |
+| 2 | [T-002](T-002-validate-contextual-advantage.md) | Prove the environment materially changes the workflow | Ready | Unassigned | T-001 | 20m |
+| 3 | [T-003](T-003-prove-critical-integration.md) | Retire the largest integration risk with a spike | Ready | Unassigned | T-001 | 30m |
 | 4 | [T-004](T-004-freeze-golden-path.md) | Freeze requirements, boundaries, and demo fixture | Proposed | Unassigned | T-002, T-003 | 20m |
 
 Implementation tickets should be written immediately after T-004, when their boundaries can reflect the selected environment and proven integration. The intended build sequence is:
@@ -53,6 +53,8 @@ T-002 and T-003 can run concurrently after concept selection.
 
 ### Gate A — Concept selection
 
+Passed: user accepted capture of the brief in the concept folder. See the decision log.
+
 - **Entry condition:** At least two credible candidates have been described and challenged.
 - **Decision or evidence required:** Scores, environmental claim, smallest workflow, and fatal concern for each finalist.
 - **Exit condition:** T-001 records one selected concept and updates `../concept/`.
@@ -74,7 +76,7 @@ T-002 and T-003 can run concurrently after concept selection.
 
 ## Next action
 
-Start [T-001](T-001-select-concept.md). The application should remain unscaffolded until this selection establishes the user, environment, trigger, context advantage, and memorable demo result.
+Review the client-first storyboard and pitch under [T-002](T-002-validate-contextual-advantage.md). [T-003](T-003-prove-critical-integration.md) is ready to test viewer load, selection, source-backed annotation and a region-bound saved note. Neither validation is complete.
 
 ## Stretch queue
 
@@ -82,4 +84,4 @@ No stretch tickets yet. Add P1 or P2 work only after implementation tickets defi
 
 ## Active blockers
 
-None. Concept selection is the current gate.
+None. Contextual and technical validation are the current gate.

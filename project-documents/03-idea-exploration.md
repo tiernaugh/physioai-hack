@@ -2,6 +2,8 @@
 
 Status: Draft
 
+Historical exploration: the assessment-room recommendation below has been superseded by the client-facing body record. See [current concept](concept/README.md) and [decision log](05-decisions-log.md). Preserve the earlier reasoning as context, not current build instructions.
+
 Use this document for combinations, candidate concepts, and criticism before a concept is selected. Move only the chosen concept into `concept/`.
 
 ## Initial direction from the team conversation

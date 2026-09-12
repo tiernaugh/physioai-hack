@@ -1,10 +1,12 @@
 # Selected Concept
 
-Status: Draft
+Status: Decided — concept selected 2026-09-12
 
-This directory becomes the source of truth once the team selects a concept. Until then, use the files as prompts and keep alternatives in `../03-idea-exploration.md`.
+The selected direction is a client-facing explorable body record. The agent maps assessment context to body regions, guides source-backed exploration and attaches client observations to selected locations. This supersedes the coach-first assessment-room concept. Architecture, detailed requirements and pitch remain drafts pending validation.
 
 ## Concept file map
+
+Current demo loop: existing body record → incoming coach note → agent maps and surfaces regional update → client explores → client adds an observation to the same region.
 
 1. [`01-proposition.md`](01-proposition.md) — concise concept, problem, outcome, and non-goals.
 2. [`02-users-and-environment.md`](02-users-and-environment.md) — target users, setting, jobs, relationships, and contextual advantage.

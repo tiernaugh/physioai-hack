@@ -1,35 +1,20 @@
 # Users and Environment
-
-Status: Draft
+Status: Decided
 
 ## Primary user
-
-- Role:
-- Situation:
-- Current behaviour:
-- Important need:
-- Current workaround:
-
-## Other participants
-
-Describe anyone who supplies context, receives an output, grants authority, or is affected by the agent's action.
+A gym or physiotherapy client revisiting an assessment and trying to understand what was discussed. The coach supplies findings and interpretation; a separate coach UI is outside this build.
 
 ## Environment
+A new client-facing body explorer used during or after the consultation. It is not an existing product already adopted by clients. The agent shares its selected region, active assessment, source material and saved observations.
 
-- Where does the agent live?
-- What are people already doing there?
-- What naturally triggers the agent?
-- What signals can the agent perceive?
-- What can it change or return in place?
+Human Atlas is the interaction reference: https://github.com/ashemag/human-atlas
+Its reference anatomy provides navigation; personal records provide personalization. Do not claim the geometry is a scan or a model of the client's actual anatomy.
 
-## Context advantage
+## Triggers
+A new coach note arrives while the client has an existing body record open. The agent uses the current assessment and note content to place a sourced update at the relevant region. The demo operator triggers a labelled incoming-note fixture; no live coach messaging integration is implied. “Show update” focuses that region. Region selection supplies context for explanation and client note capture.
 
-Specify context the environment provides without forcing a user to reconstruct it in a prompt.
+## Human control
+The client controls navigation, can stop the tour, inspect sources and preview/edit/delete their own note. Generated explanations stay distinct from coach-authored statements. No invented coach approval or clinical verification.
 
-## Trust and control
-
-- What should the agent do automatically?
-- What should it preview?
-- What requires confirmation or approval?
-- How can a person correct, retry, or stop it?
-- How are uncertainty and evidence shown?
+## Surrounding journeys
+Baseline, focused hamstring assessment, shoulder assessment, knee reassessment and ankle review can be named as future product contexts. They are not implemented clinical protocols. Return-to-sport decisions remain with the practitioner.

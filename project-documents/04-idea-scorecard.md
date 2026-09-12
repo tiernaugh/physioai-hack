@@ -11,8 +11,13 @@ Use the same evidence threshold for every candidate. Scores should reflect what 
 | Full assessment ecosystem | 2 | 3 | 2 | 4 | 11 | Cannot deliver four surfaces and several integrations reliably today |
 | Ambient assessment-room agent | 4 | 5 | 4 | 4 | 17 | Must make the live environmental event real and visible |
 | Post-assessment message agent | 4 | 3 | 3 | 4 | 14 | Risks becoming a chatbot with media upload |
+| Client body record — selected | 4 | 3 | 4 | 4 | 15 | A new viewer alone does not prove the agent belongs there |
 
 These are provisional scores based on the smallest version buildable today. They should be revisited after the critical integration spike.
+
+Earlier candidates are historical comparisons. The selected concept's 15/20 is conditional potential, not an achieved score. Do not increase theme alignment until the incoming-update loop demonstrates a material advantage.
+
+Required selected-concept evidence: an existing record receives a labelled fixture event; the agent maps its source text to a region; the client opens the update and saves an observation there; both persist after reload. Delivery is simulated. Mapping, navigation and state changes must be real. Main risks are viewer reliability and the argument that a new interface is not yet an established place of work or care.
 
 ## Scoring guidance
 

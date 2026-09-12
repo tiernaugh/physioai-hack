@@ -1,44 +1,27 @@
 # Agent Workflow
+Status: Decided
 
-Status: Draft
+1. Client opens an existing fictional body record populated from a prepared assessment.
+2. A labelled incoming-coach-note fixture triggers processing. The agent derives the region mapping from the note and existing assessment; the trigger must not hide a hardcoded target.
+3. Agent proposes a source-backed mapping to an allowed region. Code validates region IDs, laterality and evidence references; unsupported mappings remain unplaced.
+4. The application appends the note to the regional record and marks it unread: “Your coach added an update here.” Existing evidence remains intact.
+5. Client chooses “Show update.” The application focuses that region, shows the explanation and source, and marks it read when opened. Client can continue exploring or stop navigation.
+6. Client selects a region and adds a text observation.
+7. Agent proposes a record entry using the selected location, current assessment and the client's exact words.
+8. Client confirms; the application saves a dated, editable note at that region.
 
-## Golden loop
+## Evidence contract
+Each annotation contains region, side if known, assessment ID, source reference, content type and text. Content types distinguish measurement, coach statement, generated explanation and client observation.
 
-```text
-Environment changes
-→ agent perceives relevant context
-→ agent decides whether to intervene
-→ agent reasons and/or calls a tool
-→ agent proposes or takes an action
-→ human steers or approves where appropriate
-→ result returns to the environment
-→ state is updated for the next event
-```
+Incoming updates also carry event ID, author, source timestamp and read/unread state. These are record updates, not claims that the client's measured condition has changed. Retain earlier measurements unchanged unless new measurement evidence arrives. Replaying an event ID must not duplicate an update.
 
-## Trigger
+An elbow-flexion test is movement-level evidence: it must not become a diagnosis of a particular muscle. Unspecified ankle laterality stays unspecified.
 
-Define the observable event that starts the workflow.
+## Actions
+Map finding, focus region, open source, draft observation and save confirmed observation. Navigation cannot silently save or send data.
 
-## Inputs and context
+## Calculations
+If displayed, calculate asymmetry in code: abs(right-left)/max(right,left) × 100. The supplied elbow values yield 20.8%. Report thresholds are source-specific, not general standards.
 
-List data supplied by the environment, the user, prior state, and external tools. Mark which inputs are required, optional, sensitive, or demo fixtures.
-
-## Reasoning and tools
-
-Describe each meaningful decision or tool call. Keep deterministic transformations outside the model where practical.
-
-## Agent actions
-
-State exactly what the agent can create, update, send, display, or schedule.
-
-## Human control points
-
-Define preview, correction, approval, rejection, retry, and cancellation behaviour.
-
-## State and continuity
-
-Describe what persists and what future event will use it.
-
-## Failure paths
-
-Cover missing input, uncertain interpretation, tool failure, duplicate events, and denied approval where relevant.
+## Failures
+Missing evidence produces “No assessment information here.” Invalid model output cannot annotate arbitrary structures. Preserve exact client wording. Model failure allows retry without invented explanations. Reprocessing the same assessment must not duplicate notes.

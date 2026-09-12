@@ -1,8 +1,8 @@
 # Project App
 
-The hackathon product will be built here after the concept, environment, and golden path are selected.
+The selected product is a client-facing body record. Implementation will live here; contextual validation, the viewer integration spike and final build lock are still pending.
 
-Before scaffolding, define the current concept in [`../project-documents/concept/`](../project-documents/concept/README.md), particularly:
+Before scaffolding, read the current concept in [`../project-documents/concept/`](../project-documents/concept/README.md), particularly:
 
 - target user and environment;
 - natural trigger and contextual advantage;

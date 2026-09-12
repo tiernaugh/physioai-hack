@@ -1,6 +1,6 @@
 # T-003 — Prove the critical integration
 
-- **Status:** Proposed
+- **Status:** Ready
 - **Priority:** P0
 - **Owner:** Unassigned
 - **Estimate:** 30 minutes
@@ -33,6 +33,9 @@ The build should fail early on an uncertain dependency rather than after the int
 
 ## Acceptance criteria
 
+- [ ] An incoming fixture note is mapped from source text to a validated region, shown as an unread update and opened through viewer focus.
+- [ ] Replaying the event does not duplicate it; the update and client observation survive reload.
+
 - [ ] A real request, event, or interaction crosses the critical integration boundary.
 - [ ] The response or action needed by the golden path is observable.
 - [ ] Required credentials and setup steps are understood without committing secrets.
@@ -42,7 +45,7 @@ The build should fail early on an uncertain dependency rather than after the int
 
 ## Implementation notes
 
-Choose this integration from the selected workflow. Do not assume CopilotKit, WhatsApp, Telegram, or a sponsor API is critical until T-001 establishes the environment.
+Current critical boundary: body-viewer selection and focus connected to source-backed assessment annotations and persistent client notes. Test Human Atlas reuse or a comparable viewer on the demo device. Audio capture and live device integration are outside P0. Preserve upstream license and data attribution if reusing assets.
 
 ## Validation
 

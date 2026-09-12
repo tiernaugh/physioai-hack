@@ -1,30 +1,26 @@
 # Positioning
+Status: Decided
 
-Status: Draft
+Working line: “Your assessment, attached to the places it describes.”
 
-## Category
+## Narrative tension
+During a consultation, explanation has context: a movement, a body part, a demonstration. Afterward the client may have numbers in a report and only a partial memory of the conversation. The opportunity is to make that context retrievable through the body itself.
 
-What familiar frame helps someone understand the project quickly?
+## Evidence
+One coach described manually assembling reports and delivering them through WhatsApp or email. The founder described wanting to revisit their coach's explanation. Do not claim measured retention, time savings or clinical benefit.
 
-## Existing alternative
+## Why an embedded agent?
+It knows which region and assessment the client is exploring and can change the view, retrieve the corresponding evidence and attach an observation there. A standalone assistant would need the client to restate that context and transfer the result.
 
-What does the user do today, including manual work, ordinary software, and general-purpose AI?
+This new interface does not automatically satisfy “where people already work.” Theme alignment must be earned through shared spatial state and meaningful actions; it is weaker if the result is merely a viewer beside a chatbot.
 
-## Differentiation
+## Alternatives
+Static report: preserves output but requires finding and interpreting the relevant passage.
+Generic anatomy explorer: supports navigation but lacks the client's assessment context.
+Chat assistant: can explain supplied material but lacks shared body-selection state unless integrated.
 
-What can this agent perceive or do because it inhabits the chosen environment?
+## Wider vision
+A body record that develops across assessments and client observations. Historical comparison and an integrated coach workspace are future work. One simulated coach-note delivery and a real regional record update are in the demo.
 
-## Why here instead of ChatGPT?
-
-Answer concretely in terms of context, timing, identity, relationships, action, or continuity. Avoid relying on convenience alone.
-
-## Defensibility of the interaction
-
-Which part of the experience would disappear if the agent were removed from the environment?
-
-## Pitch language
-
-- Short name:
-- One-line description:
-- Ten-second explanation:
-- Memorable phrase or image:
+## Demonstrated continuity
+The demo starts with an existing record, then adds one sourced coach update and one client observation. The agent recognizes where the new context belongs and updates that place without requiring the client to reconstruct the assessment. This is the central agent behaviour; exploration is the user benefit.
