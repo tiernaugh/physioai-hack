@@ -13,6 +13,8 @@ import {
   RotateCcw,
 } from "lucide-react";
 import type { RegionId } from "./data";
+import { muscleRegion } from "./voice-annotations";
+import type { Annotation } from "./voice-annotations";
 
 type AtlasPart = {
   id: string;
@@ -41,6 +43,12 @@ type Props = {
   onSelect: (id: RegionId) => void;
   overlay: boolean;
   onOverlay: () => void;
+  recordMode?: boolean;
+  snapshotMonth?: number;
+  snapshotDate?: string;
+  annotations?: Annotation[];
+  activeAnnotationId?: string | null;
+  onAnnotationSelect?: (id: string) => void;
 };
 
 type RecoveryStage = {
@@ -121,7 +129,9 @@ async function decodeGzip(url: string, expectedBytes: number) {
   }
   const buffer = compressed
     ? await new Response(
-        new Blob([payload]).stream().pipeThrough(new DecompressionStream("gzip")),
+        new Blob([payload])
+          .stream()
+          .pipeThrough(new DecompressionStream("gzip")),
       ).arrayBuffer()
     : payload;
   if (buffer.byteLength !== expectedBytes) {
@@ -145,18 +155,60 @@ export default function BodyViewer({
   onSelect,
   overlay,
   onOverlay,
+  recordMode = false,
+  snapshotMonth = 4,
+  snapshotDate,
+  annotations,
+  activeAnnotationId,
+  onAnnotationSelect,
 }: Props) {
+  const annotationMode = annotations !== undefined;
+  const pins = useRef(new Map<string, HTMLButtonElement>());
   const mount = useRef<HTMLDivElement>(null);
   const api = useRef<ViewerApi | null>(null);
-  const current = useRef({ selected, overlay, month: 0, onSelect });
-  const [month, setMonth] = useState(0);
+  const current = useRef({
+    selected,
+    overlay,
+    month: 0,
+    onSelect,
+    annotations,
+    activeAnnotationId,
+    onAnnotationSelect,
+  });
+  const [legacyMonth, setMonth] = useState(0);
+  const month = recordMode ? snapshotMonth : legacyMonth;
   const [back, setBack] = useState(true);
   const [failed, setFailed] = useState("");
   const [loading, setLoading] = useState(true);
   const [hovered, setHovered] = useState(false);
   const stage = recoveryStages[month];
   const recovery = 100 - stage.injury;
-  current.current = { selected, overlay, month, onSelect };
+  current.current = {
+    selected,
+    overlay,
+    month,
+    onSelect,
+    annotations,
+    activeAnnotationId,
+    onAnnotationSelect,
+  };
+  const activeRegion = annotations?.find(
+    (a) => a.id === activeAnnotationId,
+  )?.region;
+  useEffect(() => {
+    if (activeRegion) {
+      const posterior = ![
+        "chest",
+        "core",
+        "left-knee",
+        "right-knee",
+        "left-ankle",
+        "right-ankle",
+      ].includes(activeRegion);
+      api.current?.turn(posterior);
+      setBack(posterior);
+    }
+  }, [activeAnnotationId, activeRegion]);
 
   useEffect(() => {
     const container = mount.current!;
@@ -176,6 +228,11 @@ export default function BodyViewer({
     let frame = 0;
     let targetMesh: THREE.Mesh | null = null;
     const disposableGeometries: THREE.BufferGeometry[] = [];
+    const regionMeshes = new Map<
+      RegionId,
+      THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial>
+    >();
+    const anchors = new Map<RegionId, THREE.Vector3>();
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setClearColor(0x000000, 0);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -183,7 +240,11 @@ export default function BodyViewer({
     renderer.toneMappingExposure = 1.25;
     renderer.domElement.setAttribute(
       "aria-label",
-      "Interactive posterior muscle anatomy showing a left hamstring recovery over six months.",
+      annotationMode
+        ? "Interactive musculature with source-linked voice-note annotations."
+        : recordMode
+          ? "Interactive reference muscle anatomy with an illustrative left hamstring highlight."
+          : "Interactive posterior muscle anatomy showing a left hamstring recovery over six months.",
     );
     renderer.domElement.setAttribute("role", "img");
     container.appendChild(renderer.domElement);
@@ -226,7 +287,8 @@ export default function BodyViewer({
     async function loadModel() {
       try {
         const atlasResponse = await fetch("/models/muscle-atlas/atlas.json");
-        if (!atlasResponse.ok) throw new Error("The muscle catalogue could not be loaded.");
+        if (!atlasResponse.ok)
+          throw new Error("The muscle catalogue could not be loaded.");
         const atlas = (await atlasResponse.json()) as Atlas;
         const chunk = atlas.chunks[0];
         const buffer = await decodeGzip(chunk.url, chunk.bytes);
@@ -234,6 +296,7 @@ export default function BodyViewer({
 
         const base: THREE.BufferGeometry[] = [];
         const target: THREE.BufferGeometry[] = [];
+        const grouped = new Map<RegionId, THREE.BufferGeometry[]>();
         for (const part of atlas.parts) {
           const geometry = new THREE.BufferGeometry();
           geometry.setAttribute(
@@ -257,26 +320,77 @@ export default function BodyViewer({
               1,
             ),
           );
-          (LEFT_HAMSTRING_IDS.has(part.id) ? target : base).push(geometry);
+          const mapped = annotationMode ? muscleRegion(part.name) : null;
+          if (mapped) {
+            const parts = grouped.get(mapped) ?? [];
+            parts.push(geometry);
+            grouped.set(mapped, parts);
+          } else
+            (annotationMode
+              ? base
+              : LEFT_HAMSTRING_IDS.has(part.id)
+                ? target
+                : base
+            ).push(geometry);
         }
 
         const baseGeometry = mergeGeometries(base, false);
-        const targetGeometry = mergeGeometries(target, false);
-        if (!baseGeometry || !targetGeometry) {
+        const targetGeometry = annotationMode
+          ? null
+          : mergeGeometries(target, false);
+        if (!baseGeometry || (!annotationMode && !targetGeometry)) {
           throw new Error("The muscle geometry could not be assembled.");
         }
         base.forEach((geometry) => geometry.dispose());
         target.forEach((geometry) => geometry.dispose());
-        disposableGeometries.push(baseGeometry, targetGeometry);
+        disposableGeometries.push(baseGeometry);
         scene.add(new THREE.Mesh(baseGeometry, baseMaterial));
-        targetMesh = new THREE.Mesh(targetGeometry, targetMaterial);
-        targetMesh.renderOrder = 2;
-        scene.add(targetMesh);
+        if (targetGeometry) {
+          disposableGeometries.push(targetGeometry);
+          targetMesh = new THREE.Mesh(targetGeometry, targetMaterial);
+          targetMesh.renderOrder = 2;
+          scene.add(targetMesh);
+        }
+        for (const [region, parts] of grouped) {
+          const geometry = mergeGeometries(parts, false);
+          parts.forEach((part) => part.dispose());
+          if (!geometry) continue;
+          disposableGeometries.push(geometry);
+          const material = baseMaterial.clone();
+          const mesh = new THREE.Mesh(geometry, material);
+          mesh.userData.region = region;
+          regionMeshes.set(region, mesh);
+          scene.add(mesh);
+          geometry.computeBoundingBox();
+          const box = geometry.boundingBox!;
+          const anchor = box.getCenter(new THREE.Vector3());
+          if (region.endsWith("ankle"))
+            anchor.y = box.min.y + (box.max.y - box.min.y) * 0.12;
+          if (region.endsWith("knee"))
+            anchor.y = box.min.y + (box.max.y - box.min.y) * 0.16;
+          anchors.set(region, anchor);
+        }
+        const active = current.current.annotations?.find(
+          (a) => a.id === current.current.activeAnnotationId,
+        );
+        if (active)
+          api.current?.turn(
+            ![
+              "chest",
+              "core",
+              "left-knee",
+              "right-knee",
+              "left-ankle",
+              "right-ankle",
+            ].includes(active.region),
+          );
         setLoading(false);
       } catch (error) {
         if (!disposed) {
           setFailed(
-            error instanceof Error ? error.message : "The muscle model could not be loaded.",
+            error instanceof Error
+              ? error.message
+              : "The muscle model could not be loaded.",
           );
           setLoading(false);
         }
@@ -291,27 +405,47 @@ export default function BodyViewer({
         -((event.clientY - bounds.top) / bounds.height) * 2 + 1,
       );
       raycaster.setFromCamera(pointer, camera);
-      return targetMesh ? raycaster.intersectObject(targetMesh, false).length > 0 : false;
+      if (annotationMode) {
+        const hit = raycaster.intersectObjects(
+          [...regionMeshes.values()],
+          false,
+        )[0];
+        return hit ? (hit.object.userData.region as RegionId) : null;
+      }
+      return targetMesh &&
+        raycaster.intersectObject(targetMesh, false).length > 0
+        ? ("left-hamstring" as const)
+        : null;
     }
 
     const onDown = (event: PointerEvent) => {
       down = { x: event.clientX, y: event.clientY };
     };
     const onUp = (event: PointerEvent) => {
-      if (Math.hypot(down.x - event.clientX, down.y - event.clientY) < 6 && point(event)) {
-        current.current.onSelect("left-hamstring");
+      const region = point(event);
+      if (
+        Math.hypot(down.x - event.clientX, down.y - event.clientY) < 6 &&
+        region
+      ) {
+        current.current.onSelect(region);
+        const annotation = current.current.annotations?.find(
+          (a) => a.region === region,
+        );
+        if (annotation) current.current.onAnnotationSelect?.(annotation.id);
       }
     };
     const onMove = (event: PointerEvent) => {
       if (event.buttons) return;
       const hit = point(event);
       renderer.domElement.style.cursor = hit ? "pointer" : "grab";
-      setHovered(hit);
+      setHovered(!!hit && !annotationMode);
     };
     const onLeave = () => setHovered(false);
     const contextLost = (event: Event) => {
       event.preventDefault();
-      setFailed("The 3D session was paused by this device. Reload to continue.");
+      setFailed(
+        "The 3D session was paused by this device. Reload to continue.",
+      );
     };
     renderer.domElement.addEventListener("pointerdown", onDown);
     renderer.domElement.addEventListener("pointerup", onUp);
@@ -320,7 +454,8 @@ export default function BodyViewer({
     renderer.domElement.addEventListener("webglcontextlost", contextLost);
 
     const resize = () => {
-      camera.aspect = container.clientWidth / Math.max(1, container.clientHeight);
+      camera.aspect =
+        container.clientWidth / Math.max(1, container.clientHeight);
       camera.updateProjectionMatrix();
       renderer.setSize(container.clientWidth, container.clientHeight);
     };
@@ -358,6 +493,9 @@ export default function BodyViewer({
     const colour = new THREE.Color();
     const desiredColour = new THREE.Color();
     const neutral = new THREE.Color("#c7b8a8");
+    const annotationColour = new THREE.Color("#c39b56");
+    const selectedColour = new THREE.Color("#71966b");
+    const projected = new THREE.Vector3();
     const animate = () => {
       if (disposed) return;
       frame = requestAnimationFrame(animate);
@@ -368,11 +506,53 @@ export default function BodyViewer({
         : neutral;
       colour.copy(targetMaterial.color).lerp(desired, 0.09);
       targetMaterial.color.copy(colour);
-      targetMaterial.emissive.copy(desired).multiplyScalar(state.overlay ? 0.25 : 0);
+      targetMaterial.emissive
+        .copy(desired)
+        .multiplyScalar(state.overlay ? 0.25 : 0);
       targetMaterial.emissiveIntensity = state.overlay
         ? 0.12 + Math.abs(0.5 - progress) * 0.26
         : 0;
       controls.update();
+      if (annotationMode) {
+        for (const [region, mesh] of regionMeshes) {
+          const related =
+            state.annotations?.filter((a) => a.region === region) ?? [];
+          const active = related.some((a) => a.id === state.activeAnnotationId);
+          const shade =
+            state.overlay && related.length
+              ? active
+                ? selectedColour
+                : annotationColour
+              : neutral;
+          mesh.material.color.lerp(shade, 0.12);
+          mesh.material.emissive
+            .copy(shade)
+            .multiplyScalar(state.overlay && related.length ? 0.1 : 0);
+        }
+        for (const annotation of state.annotations ?? []) {
+          const pin = pins.current.get(annotation.id);
+          const anchor = anchors.get(annotation.region);
+          if (!pin) continue;
+          if (!anchor) {
+            pin.style.visibility = "hidden";
+            continue;
+          }
+          projected.copy(anchor).project(camera);
+          const x = (projected.x * 0.5 + 0.5) * container.clientWidth;
+          const y = (-projected.y * 0.5 + 0.5) * container.clientHeight;
+          pin.style.left = `${x}px`;
+          pin.style.top = `${y}px`;
+          pin.style.visibility =
+            projected.z < 1 &&
+            x > 0 &&
+            x < container.clientWidth &&
+            y > 0 &&
+            y < container.clientHeight
+              ? "visible"
+              : "hidden";
+          pin.dataset.side = projected.x > 0 ? "right" : "left";
+        }
+      }
       setBack(camera.position.z < 0);
       renderer.render(scene, camera);
     };
@@ -392,34 +572,70 @@ export default function BodyViewer({
       disposableGeometries.forEach((geometry) => geometry.dispose());
       baseMaterial.dispose();
       targetMaterial.dispose();
+      regionMeshes.forEach((mesh) => mesh.material.dispose());
       renderer.dispose();
       renderer.domElement.remove();
     };
   }, []);
 
   return (
-    <section className="body-viewer recovery-viewer" aria-label="Hamstring recovery explorer">
+    <section
+      className={`body-viewer recovery-viewer ${recordMode ? "record-viewer" : ""} ${annotationMode ? "annotation-viewer" : ""}`}
+      aria-label={
+        annotationMode
+          ? "Voice note body annotations"
+          : "Hamstring recovery explorer"
+      }
+    >
       <div className="viewer-top">
         <div className="view-title">
           <Box size={17} />
-          <span>Muscle recovery</span>
+          <span>
+            {annotationMode
+              ? "Your words, on your body"
+              : recordMode
+                ? "Your body, in focus"
+                : "Muscle recovery"}
+          </span>
           <span className="version-tag">3D</span>
         </div>
         <span className={`recovery-status month-${month}`}>
-          Month {month} · {stage.status}
+          {recordMode ? snapshotDate : `Month ${month} · ${stage.status}`}
         </span>
       </div>
 
       <div className="body-canvas" ref={mount} />
+      {annotationMode && (
+        <div className="annotation-pin-layer">
+          {annotations.map((annotation, index) => (
+            <button
+              key={annotation.id}
+              ref={(node) => {
+                if (node) pins.current.set(annotation.id, node);
+                else pins.current.delete(annotation.id);
+              }}
+              className={`anatomy-pin ${annotation.id === activeAnnotationId ? "active" : ""}`}
+              aria-label={`Show annotation: ${annotation.label}`}
+              aria-pressed={annotation.id === activeAnnotationId}
+              onClick={() => onAnnotationSelect?.(annotation.id)}
+            >
+              <b>{index + 1}</b>
+              <span>{annotation.label}</span>
+            </button>
+          ))}
+        </div>
+      )}
       <div className="view-watermark">
-        RECOVERY
+        {recordMode ? "MADE TO" : "RECOVERY"}
         <br />
-        OVER TIME.
+        {recordMode ? "MOVE." : "OVER TIME."}
       </div>
       <div className="viewer-side-label">
         <span>{back ? "POSTERIOR" : "ANTERIOR"}</span>
         <i />
-        <span>LEFT HAMSTRING</span>
+        <span>
+          {annotationMode ? "REFERENCE MUSCULATURE" : "LEFT HAMSTRING"}
+        </span>
       </div>
 
       {loading && !failed && (
@@ -442,10 +658,18 @@ export default function BodyViewer({
       {hovered && <div className="hover-label">Left hamstring group</div>}
 
       <div className="viewer-tools">
-        <button title="Zoom in" aria-label="Zoom in" onClick={() => api.current?.zoom(1)}>
+        <button
+          title="Zoom in"
+          aria-label="Zoom in"
+          onClick={() => api.current?.zoom(1)}
+        >
           <Plus size={18} />
         </button>
-        <button title="Zoom out" aria-label="Zoom out" onClick={() => api.current?.zoom(-1)}>
+        <button
+          title="Zoom out"
+          aria-label="Zoom out"
+          onClick={() => api.current?.zoom(-1)}
+        >
           <Minus size={18} />
         </button>
         <div />
@@ -462,46 +686,54 @@ export default function BodyViewer({
       </div>
 
       <div className="recovery-panel">
-        <div className="recovery-panel-head">
-          <div>
-            <span>MONTH {month} OF 6</span>
-            <strong>{stage.phase}</strong>
-          </div>
-          <div
-            className="recovery-scores"
-            aria-label={`${stage.injury}% injury intensity and ${recovery}% recovery`}
-          >
-            <span className="injury-score">{stage.injury}% injury</span>
-            <span className="recovered-score">{recovery}% recovered</span>
-          </div>
-        </div>
-        <label className="sr-only" htmlFor="recovery-month">
-          Recovery month
-        </label>
-        <input
-          id="recovery-month"
-          className="recovery-range"
-          type="range"
-          min="0"
-          max="6"
-          step="1"
-          value={month}
-          style={{ "--recovery-progress": `${(month / 6) * 100}%` } as CSSProperties}
-          onChange={(event) => {
-            setMonth(Number(event.target.value));
-            onSelect("left-hamstring");
-          }}
-        />
-        <div className="month-labels" aria-hidden="true">
-          {recoveryStages.map((item) => (
-            <span key={item.month}>{item.month}</span>
-          ))}
-        </div>
-        <div className="stage-exercises">
-          {stage.exercises.map((exercise) => (
-            <span key={exercise}>{exercise}</span>
-          ))}
-        </div>
+        {!recordMode && (
+          <>
+            <div className="recovery-panel-head">
+              <div>
+                <span>MONTH {month} OF 6</span>
+                <strong>{stage.phase}</strong>
+              </div>
+              <div
+                className="recovery-scores"
+                aria-label={`${stage.injury}% injury intensity and ${recovery}% recovery`}
+              >
+                <span className="injury-score">{stage.injury}% injury</span>
+                <span className="recovered-score">{recovery}% recovered</span>
+              </div>
+            </div>
+            <label className="sr-only" htmlFor="recovery-month">
+              Recovery month
+            </label>
+            <input
+              id="recovery-month"
+              className="recovery-range"
+              type="range"
+              min="0"
+              max="6"
+              step="1"
+              value={month}
+              style={
+                {
+                  "--recovery-progress": `${(month / 6) * 100}%`,
+                } as CSSProperties
+              }
+              onChange={(event) => {
+                setMonth(Number(event.target.value));
+                onSelect("left-hamstring");
+              }}
+            />
+            <div className="month-labels" aria-hidden="true">
+              {recoveryStages.map((item) => (
+                <span key={item.month}>{item.month}</span>
+              ))}
+            </div>
+            <div className="stage-exercises">
+              {stage.exercises.map((exercise) => (
+                <span key={exercise}>{exercise}</span>
+              ))}
+            </div>
+          </>
+        )}
         <div className="recovery-panel-foot">
           <div className="segmented view-rotation">
             <button
@@ -541,10 +773,20 @@ export default function BodyViewer({
             onClick={onOverlay}
             aria-pressed={overlay}
           >
-            Recovery colour
+            {annotationMode
+              ? "Annotation highlights"
+              : recordMode
+                ? "Muscle highlight"
+                : "Recovery colour"}
           </button>
         </div>
-        <small>Illustrative timeline only · rehabilitation should be individually assessed.</small>
+        <small>
+          {annotationMode
+            ? "Pins locate reported body regions · reference muscles, not a diagnosis"
+            : recordMode
+              ? "Reference anatomy · illustrative muscle highlight"
+              : "Illustrative timeline only · rehabilitation should be individually assessed."}
+        </small>
       </div>
     </section>
   );

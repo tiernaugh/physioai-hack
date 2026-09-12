@@ -2,6 +2,8 @@
 
 Status: Decided — concept selected 2026-09-12
 
+The current prototype now uses **Today, Your progress, Activity and Voice notes**, with a goals hero, dated 3D body snapshots, calendar/appointment notes, an attributed activity log and uploaded voice notes linked to 3D annotations. This user-requested UI refresh is documented in [09-workspace-ui.md](09-workspace-ui.md); it does not claim completion of the separate consultation workflow below.
+
 The locked direction is a client-facing body record with a small coach session mode. Stephen records an explanation, reviews agent-proposed region updates and confirms them; the client explores and adds observations. Next.js, vendored Human Atlas, CopilotKit and OpenAI are selected. Technical feasibility still needs the T-003 spike.
 
 ## Concept file map

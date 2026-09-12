@@ -3,6 +3,8 @@
 Date: 2026-09-12
 Scope: merge the existing prototype work with the recorded-session handoff.
 
+UI update, 2026-09-12: the Vite prototype now has four screens (Today, Your progress, Activity, Voice notes), a goals hero, dated muscle snapshots, calendar/appointment notes and a browser-local attributed activity log. These are the only visible pages; the previous assessment and voice inbox code is retained behind a disabled flag, without visible entry points. Thirty-three automated tests pass, including activity persistence and source-linked voice annotation checks. The fourth screen uses real local Whisper transcription and conservative client-side region indexing; a synthetic audio upload has been verified end to end. See [workspace UI](../concept/09-workspace-ui.md).
+
 The repository combines Kingsley's application work with Tiernan's accepted consultation brief. Existing app features are preserved. The brief describes the target workflow; merging its documents does not implement it or change the runtime framework.
 
 | Area | Current repository | Relationship to the consultation brief |

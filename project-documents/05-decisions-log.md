@@ -103,3 +103,41 @@ Record decisions that materially affect product scope, interaction design, archi
 - **Alternatives considered:** Separate full instruction files for each agent.
 - **Consequences:** Changes belong in `AGENTS.md`; the `CLAUDE.md` bridge files should stay minimal.
 - **Owner:** Team
+
+### 2026-09-12 — Refresh the prototype into Today, Progress and Activity
+
+- **Status:** Decided; implemented in the Vite prototype
+- **Decision:** Replace the six-item prototype navigation with three screens: Today, Your progress and Activity. The user corrected the initial mention of four screens. Add a goals hero to Today as explicitly requested, retain the 3D musculature, show dated body snapshots and daily exercises, and put calendar/appointment notes and attributed activity in their own spaces.
+- **Reason:** The user wants a clear view of current health and goals, improvement over time, and everything exchanged between the user, physio and agent.
+- **Human control:** User/physio demo perspectives can mark activity done/reopen it, add attributed notes and create updates. Saved exercise sessions appear in the feed and calendar. Completion is an activity acknowledgement, not clinical approval.
+- **Data boundaries:** Health scores, goals, recovery snapshots and agent insights remain labelled fictional examples. Notes/completion are browser-local. Existing session storage, assessment evidence and optional voice backend are preserved. Voice data is scoped to the fictional profile and local tests.
+- **Consequences:** Assessment and voice tools are now dialogs reached from Progress and Activity. Contextual companion cards replace the old scripted chat panel. This prototype request adds surrounding UI scope without claiming completion of the separately planned consultation P0. See `concept/09-workspace-ui.md`.
+- **Owner:** Team, following Kingsley's UI direction.
+
+### 2026-09-12 — Expand two activity notes into annotated agent reviews
+
+- **Status:** Implemented in the Vite prototype
+- **Decision:** Turn the two existing agent entries into detailed progress and shortened-session reviews, with comparison metrics, three linked insights on a 3D anatomy study, assessment, uncertainty, review questions and inspectable source excerpts. Keep each expanded in Activity with a collapse control; compact calendar entries start collapsed.
+- **Reason:** Kingsley requested two deep analyses in the activity timeline with 3D images annotated with the insights.
+- **Human control and provenance:** Reviews are explicitly authored sample snapshots, using only evidence available at each entry date. They describe the fictional records, preserve open questions and leave plan decisions with Stephen. Pins show approximate discussion locations on reference anatomy, not measured pathology. The earlier 8 September agent timestamp moves to 18:45, after the source session.
+- **Implementation:** Reuse the packaged muscle atlas with a cached download and on-demand rendering. Pins follow camera projection; selecting either a pin or its written insight highlights both. Search and Markdown export include the complete review. The existing note form captures the human response; no external messaging or new clinical workflow is introduced.
+- **Owner:** Team, following Kingsley's timeline direction.
+
+### 2026-09-12 — Add a voice-note annotation screen
+
+- **Status:** Decided; implemented following the user's explicit fourth-screen request
+- **Decision:** Add Voice notes to the refreshed navigation. Upload actual audio through the existing local backend, transcribe with Whisper, and index explicit body-region mentions into clickable 3D annotations with exact transcript excerpts.
+- **Reason:** Turn a note into spatial context in the body record while keeping the original evidence inspectable.
+- **Human control:** Automatic annotations are unreviewed. Missing/ambiguous locations and corrections remain unplaced. A human can correct or select a supported location and confirm it, with browser-local persistence. Confirmation concerns location only.
+- **Technical boundary:** Region indexing is conservative local logic, not a hosted LLM or clinical inference. Backend transcript storage and WhatsApp review remain separate from browser-local annotation edits. Existing upload limits, retry behavior and profile scoping are retained; no external messages are sent from this screen.
+- **Verification:** A synthetic spoken note was uploaded through the UI and transcribed by the real local Whisper engine, producing left-hamstring, right-shoulder and left-calf pins. Unit tests cover source offsets, ambiguity/corrections, bilateral/negated observations, full reference-region geometry coverage and persistence failures.
+- **Owner:** Team, following Kingsley's direction.
+
+
+### 2026-09-12 — Expose only the four refreshed pages
+
+- **Status:** Implemented following Kingsley's explicit request
+- **Decision:** Keep Today, Your progress, Activity and Voice notes as the only visible pages. Disable legacy assessment/inbox launch controls and modal rendering with `legacyViewsEnabled = false`; retain their components, modal code, data and backend integration. Activity’s voice shortcut opens the new Voice notes page.
+- **Reason:** Focus the visible app on the requested four-screen experience without deleting earlier work.
+- **Consequences:** Exercise details, session logging, update forms and demo information remain contextual dialogs within the four pages. Legacy views can be restored deliberately through the retained flag.
+- **Owner:** Team, following Kingsley's direction.
