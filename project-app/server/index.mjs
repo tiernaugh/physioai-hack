@@ -6,12 +6,13 @@ import { pathToFileURL } from 'node:url';
 import { NoteStore } from './store.mjs';
 import { createPipeline, demoTranscript, demoExtraction, receipt } from './pipeline.mjs';
 import { requiredLive } from './config.mjs';
+import { contextSchema, openAIAnalysis } from './analysis.mjs';
 import { readLimited, metaClient } from './whatsapp.mjs';
 
 const json = (res, status, body) => { res.writeHead(status, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }); res.end(JSON.stringify(body)); };
 const equal = (a, b) => { const x = Buffer.from(a || ''), y = Buffer.from(b || ''); return x.length === y.length && timingSafeEqual(x, y); };
 
-export function createApp({ store, processNote, mode = 'demo', env = process.env, channelStatus = () => 'not_connected', localReady = false }) {
+export function createApp({ store, processNote, mode = 'demo', env = process.env, channelStatus = () => 'not_connected', localReady = false, analysisProvider = 'off' }) {
   return createServer(async (req, res) => {
     try {
       const url = new URL(req.url, 'http://localhost');
@@ -22,7 +23,7 @@ export function createApp({ store, processNote, mode = 'demo', env = process.env
         if (req.headers.origin && !['http://localhost:5173', 'http://127.0.0.1:5173', `http://${req.headers.host}`].includes(req.headers.origin)) return json(res, 403, { error: 'Origin rejected' });
         if (mode === 'live' && !equal(req.headers.authorization, `Bearer ${env.ADMIN_TOKEN}`)) return json(res, 401, { error: 'Enter the admin token to open the live inbox.' });
         if (req.method === 'GET' && url.pathname === '/api/voice/status') return json(res, 200, {
-          mode, channel: channelStatus(), missing: requiredLive.filter(key => !env[key]), localReady,
+          mode, analysisProvider, transcriptionProvider: mode === 'demo' ? 'demo' : 'local-whisper', channel: channelStatus(), missing: requiredLive.filter(key => !env[key]), localReady,
         });
         if (req.method === 'GET' && url.pathname === '/api/voice/notes') return json(res, 200, store.publicNotes());
         if (req.method === 'POST' && url.pathname === '/api/voice/demo' && mode !== 'live') {
@@ -35,22 +36,33 @@ export function createApp({ store, processNote, mode = 'demo', env = process.env
           if (Number(req.headers['content-length']) > 12 * 1024 * 1024) return json(res, 413, { error: 'File too large' });
           let input;
           try { input = JSON.parse((await readLimited(req, 12 * 1024 * 1024)).toString()); } catch { return json(res, 400, { error: 'Invalid upload' }); }
+          if (!input || typeof input !== 'object') return json(res, 400, { error: 'Invalid upload' });
+          const context = contextSchema.safeParse(input.context || []);
+          if (!context.success) return json(res, 400, { error: 'Invalid note context' });
           const validText = typeof input.transcript === 'string' && input.transcript.trim() && input.transcript.length <= 20000;
           const validAudio = localReady && input.audio?.type === 'data' && typeof input.audio.value === 'string' && input.audio.value.length <= 11200000 && /^audio\//.test(input.audio.mimeType);
           if (!validText && !validAudio) return json(res, 400, { error: 'Enter a transcript or supply an audio file (local Whisper must be installed).' });
-          const note = await store.receive({ id: `local-${randomUUID()}`, patientId: 'local-test', source: 'local',
+          const note = await store.receive({ id: `local-${randomUUID()}`, patientId: 'local-test', source: 'local', context: context.data,
             transcript: validText ? input.transcript.trim() : null, audio: validText ? null : input.audio });
           // Return immediately; the inbox can refresh while local transcription runs.
           void processNote(note.id).catch(() => {});
           return json(res, 202, { id: note.id });
         }
-        const action = url.pathname.match(/^\/api\/voice\/notes\/([^/]+)\/(retry|review)$/);
+        const action = url.pathname.match(/^\/api\/voice\/notes\/([^/]+)\/(retry|review|analyse)$/);
         if (req.method === 'POST' && action) {
           const id = decodeURIComponent(action[1]), note = store.get(id);
           if (!note) return json(res, 404, { error: 'Note not found' });
+          if (action[2] === 'analyse') {
+            if (analysisProvider === 'off') return json(res, 409, { error: 'AI analysis is not configured on the voice service.' });
+            if (!['saved', 'reviewed'].includes(note.status) || !note.transcript || note.source === 'demo') return json(res, 409, { error: 'Save a real transcript before analysing it.' });
+            await store.update(id, { analysisStatus: 'pending', analysisError: null });
+            void processNote(id, { analyseOnly: true }).catch(() => {});
+            return json(res, 202, { ok: true });
+          }
           if (action[2] === 'retry') {
             if (!['failed', 'received', 'transcribing', 'extracting'].includes(note.status)) return json(res, 409, { error: 'This note is already saved' });
-            await processNote(id);
+            void processNote(id).catch(() => {});
+            return json(res, 202, { ok: true });
           } else {
             if (!['saved', 'reviewed'].includes(note.status)) return json(res, 409, { error: 'Save the note before reviewing it' });
             await store.update(id, { status: 'reviewed', reviewedAt: new Date().toISOString() });
@@ -88,14 +100,15 @@ export async function main() {
     catch { if (mode === 'live') throw new Error('Local transcription is not ready. Run the setup steps in WHATSAPP-SETUP.md.');
       console.log('Local transcription needs setup. Text reports still work; see WHATSAPP-SETUP.md.'); }
   }
-  const processNote = createPipeline({ store, ...provider, download: mode === 'live' ? metaClient(process.env).download : undefined });
+  const analyser = mode === 'demo' ? null : openAIAnalysis();
+  const processNote = createPipeline({ store, ...provider, analyser, download: mode === 'live' ? metaClient(process.env).download : undefined });
   let channels;
   if (mode === 'live') channels = await (await import('./whatsapp.mjs')).startWhatsApp({ store, processNote });
   // Resume work durably captured before a restart. Failed notes require an explicit retry.
-  for (const note of store.list().filter(n => n.source !== 'whatsapp' && ['received', 'transcribing', 'extracting'].includes(n.status))) {
+  for (const note of store.list().reverse().filter(n => n.source !== 'whatsapp' && (['received', 'transcribing', 'extracting'].includes(n.status) || (n.transcript && ['pending', 'analysing'].includes(n.analysisStatus))))) {
     await processNote(note.id).catch(() => {});
   }
-  const server = createApp({ store, processNote, mode, localReady, channelStatus: () => channels?.status().overall || 'not_connected' });
+  const server = createApp({ store, processNote, mode, localReady, analysisProvider: analyser?.provider || 'off', channelStatus: () => channels?.status().overall || 'not_connected' });
   const port = Number(process.env.VOICE_PORT || 3001);
   server.listen(port, '127.0.0.1', () => console.log(`Voice inbox (${mode}): http://127.0.0.1:${port}`));
   for (const signal of ['SIGINT', 'SIGTERM']) process.on(signal, async () => { await channels?.stop(); server.close(() => process.exit(0)); });

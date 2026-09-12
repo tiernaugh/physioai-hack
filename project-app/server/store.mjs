@@ -33,7 +33,7 @@ export class NoteStore {
   }
   list() { return structuredClone(this.data.notes).reverse(); }
   get(id) { return structuredClone(this.data.notes.find(n => n.id === id)); }
-  async receive({ id, patientId, source, transcript = null, audio = null, whatsapp = null }) {
+  async receive({ id, patientId, source, transcript = null, audio = null, whatsapp = null, context = [] }) {
     return this.mutate(data => {
       const existing = data.notes.find(n => n.id === id);
       if (existing) {
@@ -41,7 +41,8 @@ export class NoteStore {
         return existing;
       }
       const note = { id, patientId, source, receivedAt: new Date().toISOString(),
-        status: 'received', transcript, audio, whatsapp, extraction: null, error: null,
+        status: 'received', transcript, audio, whatsapp, context, extraction: null, error: null,
+        analysis: null, analysisStatus: 'pending', analysisError: null,
         replyStatus: 'not_sent', reviewedAt: null };
       data.notes.push(note);
       return note;
@@ -55,5 +56,5 @@ export class NoteStore {
       return note;
     });
   }
-  publicNotes() { return this.list().map(({ audio, whatsapp, ...note }) => note); }
+  publicNotes() { return this.list().map(({ audio, whatsapp, context, analysisContext, ...note }) => note); }
 }

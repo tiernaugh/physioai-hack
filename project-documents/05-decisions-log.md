@@ -150,6 +150,16 @@ Record decisions that materially affect product scope, interaction design, archi
 - **Consequences:** Exercise details, session logging, update forms and demo information remain contextual dialogs within the four pages. Legacy views can be restored deliberately through the retained flag.
 - **Owner:** Team, following Kingsley's direction.
 
+### 2026-09-12 — Record voice notes directly in the existing page
+
+- **Status:** Implemented following Kingsley's request for actual voice recording
+- **Decision:** Capture microphone audio using browser MediaRecorder, with a timer, Stop & review, Cancel and playback. Feed the completed audio file into the existing local Whisper upload pipeline only after the user chooses Transcribe & map to body.
+- **Reason:** People can speak a note in the body workspace without first creating an audio file in another app.
+- **Human control:** Capture requires browser microphone permission. Recording does not submit audio automatically. Cancellation keeps any previously selected file; stop, cancel and page navigation release microphone tracks, including tracks granted after a cancelled permission request. Draft audio remains in memory and is discarded on page exit.
+- **Technical boundary:** Select supported WebM/Opus, MP4/M4A or OGG formats. Respect the existing 8 MiB / ten-minute service limits. Capture/playback work independently of backend availability. The separate consultation workflow and timestamped body-selection context remain planned work.
+- **Verification:** Fifteen recorder lifecycle tests plus the existing suite; Chromium capture from a synthetic speech microphone through real MediaRecorder and local Whisper, playback, retry after a failed upload, cancellation/navigation cleanup and mobile controls. Physical microphone and Safari verification remain device checks.
+- **Owner:** Team, following Kingsley's direction.
+
 
 ### 2026-09-12 — Bring anatomy and an age comparison into Today’s hero
 
@@ -158,3 +168,39 @@ Record decisions that materially affect product scope, interaction design, archi
 - **Data boundary:** Alex has no recorded age and the prototype has no age-matched population reference. The number and cohort are display-only fixtures, marked “Example comparison”; the info disclosure explains their limits and distinguishes percentile from the 78/100 score. A real ranking requires an actual age, a defined comparable measure and a suitable reference dataset.
 - **Layout:** Goals and percentile sit beside the body on desktop. Mobile puts the body directly after the goals, then the comparison. Current score, status, appointment and exercises remain below the hero.
 - **Owner:** Team, following Kingsley's direction.
+
+
+### 2026-09-12 — Embed the imported body record in Today’s hero
+
+- **Status:** Implemented following Kingsley’s request.
+- **Source:** Pulled `origin/main` through `726b95b`; the remote has no `master` branch.
+- **Decision:** Reuse `src/body-record/` inside the existing hero with compact Notes / Progress views, region markers, camera controls and dated replay. Markers and Open record expand the same mounted workspace for source notes, observation editing and consultation review. Keep the existing navigation without adding a separate Body record page; `#body-record` links open the hero’s expanded record.
+- **State and data:** Expanding/collapsing retains notes, observations and progress selection; leaving Today or refreshing clears them, as in the imported prototype. Shoulder/elbow consultation fixtures are separate from the sample hamstring status and score. Capture/processing remains simulated; no new provider or persistence is implied.
+- **Scope:** Preserve the goals/comparison hero and the existing exercise, activity and voice work.
+- **Verification:** Production build and 48 existing tests pass. Browser checks cover marker expansion, source notes, adding an observation and retaining it after collapse, progress replay, confirming two sample consultation notes and updating the hero count, `#body-record` entry, Escape in both body and exercise dialogs, and desktop/mobile layouts without horizontal overflow.
+
+### 2026-09-12 — Create voice notes from Activity
+
+- **Status:** Implemented following Kingsley's direction; supersedes the separate Voice notes page and generic update form.
+- **Decision:** Change Add an update to Add a voice note, opening a compact modal also available through Activity's floating bottom-right plus. The flow is record or upload → listen back → add to Activity. Close after acceptance; show transcription progress and the resulting transcript in the feed.
+- **Scope:** The user explicitly assigned annotations entirely to an agent and deferred that work. Note creation has no body viewer, manual region placement or annotation approval. Existing annotation helpers and stored edits are retained without being invoked.
+- **Boundaries:** Preserve the existing recording safeguards, local transcription backend, source/profile scoping and retry behavior. Creation sends no external messages or clinical approvals. Unsaved audio remains temporary and modal dismissal releases the microphone.
+- **Owner:** Team, following Kingsley's Activity and voice-note instructions.
+
+
+### 2026-09-12 — Create voice notes from Today and download records from Activity
+
+- **Status:** Implemented following Kingsley's direction; supersedes the placement in the preceding Activity voice-note decision.
+- **Decision:** Move the header's Add a voice note action and floating plus to Today. Activity's header offers Download my record. Existing voice-note links open creation over Today; saving still opens the Activity entry and transcript.
+- **Scope:** Preserve recording, uploads, transcription, saved-note viewing and the existing Markdown export contents. Keep the Progress download shortcut.
+
+
+### 2026-09-12 — Automatically analyse new voice notes in their record context
+
+- **Status:** Implemented following Kingsley's request; OpenAI access verified.
+- **Decision:** Keep local Whisper transcription and add a server-side OpenAI Responses step after each successfully saved real note. The default configurable analysis model is `gpt-5-mini`. Offline mode retains transcription/basic parsing; no local contextual language model is implied.
+- **Context:** Select earlier same-patient voice transcripts plus human Activity notes, comments and session reports captured with the new local note. Exclude future entries and generated interpretations, bound the payload, preserve evidence snapshots and identify fictional sample context. The separate body-record consultation state remains outside this integration.
+- **Experience:** Save closes the composer immediately. Activity updates automatically with the transcript and a distinct Agent analysis entry, including comparisons, uncertainties, review questions and expandable sources. Search/export include analysis; opening the note exposes analysis and retry.
+- **Reliability:** Validate output and source IDs, serialize work per patient, deduplicate concurrent jobs, resume interrupted work and preserve successful transcription on model failure. Retry analysis reuses the saved context and transcript. Existing notes are analysed only through an explicit Analyse note action.
+- **Data and authority:** The API key stays in ignored server environment configuration. Audio stays local; transcript and earlier-note context go to OpenAI. Generated analysis is an interpretation for review and makes no clinical approval, routine change or body annotation.
+- **Verification:** 56 tests and production build pass; live OpenAI response verified with synthetic evidence. End-to-end browser verification passed with a synthetic spoken recording, automatic Activity updates, the Agent filter and source review. Live evidence review led to explicit restrictions against transferring scores across body regions or activities.

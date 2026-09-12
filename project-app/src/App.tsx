@@ -27,11 +27,14 @@ import {
   UserRound,
   X,
 } from "lucide-react";
-import BodyViewer from "./BodyViewer";
 import BodyRecord from "./body-record/BodyRecord";
 import AssessmentStory from "./AssessmentStory";
 import VoiceInbox from "./VoiceInbox";
 import VoiceNotes from "./VoiceNotes";
+import type { VoiceNote } from "./VoiceNotes";
+import VoiceAnalysis from './VoiceAnalysis';
+import { buildVoiceContext, voiceActivity, voiceInProgress, voiceAnalysisText } from './voice-analysis';
+import type { VoiceAnalysis as VoiceAnalysisData } from './voice-analysis';
 import AgentDeepDive from "./AgentDeepDive";
 import { agentAnalyses, analysisText } from "./agent-analysis";
 import {
@@ -59,12 +62,11 @@ import type { ActivityEntry, Actor, CareStore, Human } from "./care-data";
 import "./refresh.css";
 import "./today-hero.css";
 
-type Page = "today" | "progress" | "activity" | "voice-notes" | "body-record";
+type Page = "today" | "progress" | "activity";
 type Panel = "help" | "assessment" | "voice" | "update" | null;
 // Retain the earlier screens for future work, without exposing them in the app.
 const legacyViewsEnabled = false;
 const nav = [
-  { id: "body-record", label: "Body record", icon: Activity, caption: "Notes and muscle progress" },
   {
     id: "today",
     label: "Today",
@@ -83,12 +85,6 @@ const nav = [
     icon: Activity,
     caption: "One shared conversation",
   },
-  {
-    id: "voice-notes",
-    label: "Voice notes",
-    icon: Mic,
-    caption: "Your words, on your body",
-  },
 ] as const;
 
 function Modal({
@@ -96,11 +92,13 @@ function Modal({
   children,
   onClose,
   wide = false,
+  className = "",
 }: {
   title: string;
   children: ReactNode;
   onClose: () => void;
   wide?: boolean;
+  className?: string;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   useEffect(() => {
@@ -111,7 +109,7 @@ function Modal({
   return (
     <dialog
       ref={ref}
-      className={`modal care-modal ${wide ? "wide" : ""}`}
+      className={`modal care-modal ${wide ? "wide" : ""} ${className}`}
       aria-label={title}
       onCancel={onClose}
       onClick={(e) => {
@@ -213,13 +211,11 @@ function ScoreChart() {
 }
 
 export default function App() {
-  const [page, setPage] = useState<Page>(() =>
-    ["today", "progress", "activity", "voice-notes"].includes(
-      location.hash.slice(1),
-    )
-      ? (location.hash.slice(1) as Page)
-      : "today",
-  );
+  const [page, setPage] = useState<Page>(() => {
+    const hash = location.hash.slice(1);
+    if (hash === "voice-notes") return "today";
+    return nav.some((item) => item.id === hash) ? (hash as Page) : "today";
+  });
   const [mobileMenu, setMobileMenu] = useState(false);
   const [actor, setActor] = useState<Human>("user");
   const [initialSessions] = useState(loadSessions);
@@ -230,10 +226,12 @@ export default function App() {
     initialCare.warning || initialSessions.warning || "",
   );
   const [toast, setToast] = useState("");
-  const [panel, setPanel] = useState<Panel>(null);
-  const [selected, setSelected] = useState<RegionId>("left-hamstring");
-  const [overlay, setOverlay] = useState(true);
-  const [snapshotIndex, setSnapshotIndex] = useState(snapshots.length - 1);
+  const [panel, setPanel] = useState<Panel>(
+    () => location.hash === "#voice-notes" ? "update" : null,
+  );
+  const [voiceNoteId, setVoiceNoteId] = useState<string | null>(null);
+  const voiceToken = useRef("");
+  const [voiceWorking, setVoiceWorking] = useState(false);
   const [detail, setDetail] = useState<Exercise | null>(null);
   const [sessionOpen, setSessionOpen] = useState(false);
   const [filter, setFilter] = useState<Actor | "all">("all");
@@ -241,10 +239,10 @@ export default function App() {
   const [search, setSearch] = useState("");
   const [calendarMonth, setCalendarMonth] = useState(new Date(2026, 8, 1));
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
-  const [voiceEntries, setVoiceEntries] = useState<ActivityEntry[]>([]);
-  const [voiceState, setVoiceState] = useState("Checking voice inbox…");
-  const snapshot = snapshots[snapshotIndex];
-  const region = regions.find((r) => r.id === selected)!;
+  const [voiceNotes, setVoiceNotes] = useState<VoiceNote[]>([]);
+  const voiceEntries = voiceActivity(voiceNotes);
+  const analysisForEntry = (id: string) => id.startsWith("voice-analysis:") ? voiceNotes.find(note => note.id === id.slice(15))?.analysis : undefined;
+  const [voiceState, setVoiceState] = useState("Checking voice notes…");
   const entries = [
     ...care.entries,
     ...sampleActivity,
@@ -267,7 +265,7 @@ export default function App() {
       (statusFilter === "all" ||
         (care.updates[e.id]?.done ?? e.kind === "exercise") ===
           (statusFilter === "done")) &&
-      `${e.title} ${e.body} ${actorNames[e.actor]} ${analysisText(e.id)}`
+      `${e.title} ${e.body} ${actorNames[e.actor]} ${analysisText(e.id)} ${voiceAnalysisText(analysisForEntry(e.id))}`
         .toLowerCase()
         .includes(search.toLowerCase()),
   );
@@ -278,16 +276,28 @@ export default function App() {
   }, [toast]);
   useEffect(() => {
     const fn = () => {
-      const hash = location.hash.slice(1);
-      if (["today", "progress", "activity", "voice-notes"].includes(hash))
+      const hash = location.hash === "#body-record" ? "today" : location.hash.slice(1);
+      if (hash === "voice-notes") {
+        setPage("today");
+        setVoiceNoteId(null);
+        setPanel("update");
+        history.replaceState(null, "", "#today");
+      } else if (nav.some((item) => item.id === hash)) {
         setPage(hash as Page);
+      }
     };
+    fn();
     window.addEventListener("hashchange", fn);
     return () => window.removeEventListener("hashchange", fn);
   }, []);
   useEffect(() => {
-    if (panel !== "voice") void refreshVoice();
+    if (panel !== "voice" && panel !== "update") void refreshVoice();
   }, [panel, page]);
+  useEffect(() => {
+    if (!voiceWorking || panel === "update") return;
+    const timer = window.setTimeout(() => void refreshVoice(), 2200);
+    return () => clearTimeout(timer);
+  }, [voiceWorking, voiceNotes, panel]);
   useEffect(() => {
     const fn = () => {
       const next = loadCareStore();
@@ -302,49 +312,34 @@ export default function App() {
     window.addEventListener("storage", fn);
     return () => window.removeEventListener("storage", fn);
   }, []);
+  function receiveVoiceNotes(notes: VoiceNote[], token = voiceToken.current) {
+    voiceToken.current = token;
+    const eligible = notes.filter(
+      (n) => ["demo-alex", "local-test"].includes(n.patientId) &&
+        typeof n.id === "string" && Number.isFinite(Date.parse(n.receivedAt)),
+    );
+    setVoiceWorking(eligible.some(voiceInProgress));
+    setVoiceNotes(eligible);
+    setVoiceState("Voice notes connected");
+  }
   async function refreshVoice() {
     try {
-      const response = await fetch("/api/voice/notes");
-      if (!response.ok)
-        throw new Error(
-          response.status === 401
-            ? "Voice inbox locked · open to unlock"
-            : "Voice inbox unavailable",
-        );
+      const response = await fetch("/api/voice/notes", {
+        headers: voiceToken.current ? { Authorization: `Bearer ${voiceToken.current}` } : {},
+        signal: AbortSignal.timeout(15000),
+      });
+      if (!response.ok) throw new Error(response.status === 401
+        ? "Voice notes locked · add a voice note to unlock" : "Voice notes unavailable");
       const notes = await response.json();
-      if (!Array.isArray(notes)) throw new Error("Voice inbox unavailable");
-      // Only this fictional profile and explicit local/demo tests belong in this workspace.
-      setVoiceEntries(
-        notes
-          .filter(
-            (n) =>
-              ["demo-alex", "local-test"].includes(n.patientId) &&
-              typeof n.id === "string" &&
-              Number.isFinite(Date.parse(n.receivedAt)),
-          )
-          .map((n) => ({
-            id: `voice:${n.id}`,
-            date: n.receivedAt,
-            actor: "user" as const,
-            title: n.extraction?.exercise || "Voice note received",
-            body:
-              n.transcript ||
-              `Voice note ${n.status}. Open the inbox to review.`,
-            kind: "voice" as const,
-            source:
-              n.source === "demo"
-                ? ("sample" as const)
-                : n.source === "whatsapp"
-                  ? ("whatsapp" as const)
-                  : ("local" as const),
-          })),
-      );
-      setVoiceState("Voice inbox connected");
+      if (!Array.isArray(notes)) throw new Error("Voice notes unavailable");
+      receiveVoiceNotes(notes);
     } catch (err) {
-      setVoiceState(
-        err instanceof Error ? err.message : "Voice inbox unavailable",
-      );
+      setVoiceState(err instanceof Error ? err.message : "Voice notes unavailable");
     }
+  }
+  function openVoiceNote(id: string | null = null) {
+    setVoiceNoteId(id);
+    setPanel("update");
   }
   function navigate(next: Page) {
     setPage(next);
@@ -403,7 +398,7 @@ export default function App() {
     const log = entries
       .map(
         (e) =>
-          `### ${e.title}\n${e.date} · ${actorNames[e.actor]} · ${e.source}\n${e.body}\n${analysisText(e.id)}\nStatus: ${(care.updates[e.id]?.done ?? e.kind === "exercise") ? "Done" : "Open"}\n${(care.updates[e.id]?.notes ?? []).map((n) => `- ${n.date} · ${actorNames[n.actor]}: ${n.text}`).join("\n")}`,
+          `### ${e.title}\n${e.date} · ${actorNames[e.actor]} · ${e.source}\n${e.body}\n${analysisText(e.id)}\n${voiceAnalysisText(analysisForEntry(e.id))}\nStatus: ${(care.updates[e.id]?.done ?? e.kind === "exercise") ? "Done" : "Open"}\n${(care.updates[e.id]?.notes ?? []).map((n) => `- ${n.date} · ${actorNames[n.actor]}: ${n.text}`).join("\n")}`,
       )
       .join("\n\n");
     const url = URL.createObjectURL(
@@ -435,6 +430,9 @@ export default function App() {
         actor={actor}
         onDone={() => updateEntry(entry)}
         onNote={(text) => updateEntry(entry, text)}
+        onOpenVoice={entry.id.startsWith("voice:") ? () => openVoiceNote(entry.id.slice(6))
+          : entry.id.startsWith("voice-analysis:") ? () => openVoiceNote(entry.id.slice(15)) : undefined}
+        voiceAnalysis={analysisForEntry(entry.id)}
         compact={compact}
       />
     );
@@ -573,7 +571,7 @@ export default function App() {
           </div>
         </header>
         <div className="care-content">
-          {page !== "body-record" && <div className="care-page-heading">
+          <div className="care-page-heading">
             <div>
               <span className="care-kicker">
                 {page === "today"
@@ -591,10 +589,6 @@ export default function App() {
                   <>
                     Look how far you’ve come<span>.</span>
                   </>
-                ) : page === "voice-notes" ? (
-                  <>
-                    Your words, made visible<span>.</span>
-                  </>
                 ) : (
                   <>
                     Your care, all in one place<span>.</span>
@@ -606,41 +600,17 @@ export default function App() {
                   ? "Welcome back, Alex. Here’s where you are and what’s next."
                   : page === "progress"
                     ? "Your progress, appointments and the notes that connect them."
-                    : page === "voice-notes"
-                      ? "From a voice note to observations on your musculature. All connected to what you said."
-                      : "Every check-in, physio update and agent insight. Nothing lost along the way."}
+                    : "Every check-in, physio update and agent insight. Nothing lost along the way."}
               </p>
             </div>
-            {(page !== "voice-notes" || legacyViewsEnabled) && (
-              <button
-                className={
-                  page === "activity" ? "care-primary" : "care-secondary"
-                }
-                onClick={() =>
-                  page === "activity"
-                    ? setPanel("update")
-                    : page === "voice-notes"
-                      ? setPanel("voice")
-                      : exportRecord()
-                }
-              >
-                {page === "activity" ? (
-                  <Plus size={16} />
-                ) : page === "voice-notes" ? (
-                  <Mic size={16} />
-                ) : (
-                  <ArrowDownToLine size={16} />
-                )}{" "}
-                {page === "activity"
-                  ? "Add an update"
-                  : page === "voice-notes"
-                    ? "Open voice inbox"
-                    : "Export record"}
-              </button>
-            )}
+            <button
+              className={page === "today" ? "care-primary" : "care-secondary"}
+              onClick={() => page === "today" ? openVoiceNote() : exportRecord()}
+            >
+              {page === "today" ? <Mic size={16} /> : <ArrowDownToLine size={16} />}
+              {page === "today" ? "Add a voice note" : "Download my record"}
+            </button>
           </div>
-          }
-          {page === "body-record" && <BodyRecord />}
           {error && (
             <div className="care-error" role="alert">
               {error}
@@ -650,9 +620,6 @@ export default function App() {
             </div>
           )}
 
-          {page === "voice-notes" && (
-            <VoiceNotes onNotesChanged={() => void refreshVoice()} />
-          )}
           {page === "today" && (
             <>
               <section
@@ -724,95 +691,7 @@ export default function App() {
                   className="care-body-card care-hero-body"
                   aria-label="Your body today"
                 >
-                  <div className="care-card-heading">
-                    <div>
-                      <span className="care-kicker">THE WHOLE PICTURE</span>
-                      <h2>Your body today</h2>
-                    </div>
-                    <span className="care-tag">Interactive 3D</span>
-                  </div>
-                  <div className="care-body-stage">
-                    <BodyViewer
-                      selected={selected}
-                      onSelect={setSelected}
-                      overlay={overlay}
-                      onOverlay={() => setOverlay(!overlay)}
-                      recordMode
-                      snapshotMonth={snapshot.month}
-                      snapshotDate={shortDate(snapshot.date)}
-                    />
-                    <div className="care-body-callout">
-                      <span className="care-kicker">
-                        {shortDate(snapshot.date).toUpperCase()} · SAMPLE STATUS
-                      </span>
-                      <strong>Left hamstring</strong>
-                      <span>
-                        <i />
-                        {snapshot.status}
-                      </span>
-                      <small>
-                        {snapshot.discomfort}/10 reported discomfort
-                      </small>
-                    </div>
-                  </div>
-                  <div className="care-body-dates">
-                    <div>
-                      <span className="care-kicker">YOUR BODY OVER TIME</span>
-                      <span>
-                        {snapshotIndex === snapshots.length - 1
-                          ? "Latest snapshot"
-                          : `Viewing ${shortDate(snapshot.date)}`}
-                      </span>
-                    </div>
-                    <div className="care-date-track">
-                      {snapshots.map((s, i) => (
-                        <button
-                          key={s.date}
-                          className={i === snapshotIndex ? "selected" : ""}
-                          onClick={() => {
-                            setSnapshotIndex(i);
-                            setSelected("left-hamstring");
-                          }}
-                          aria-pressed={i === snapshotIndex}
-                          aria-label={`Body snapshot ${shortDate(s.date)}`}
-                        >
-                          <i />
-                          <span>
-                            {i === snapshots.length - 1
-                              ? "Today"
-                              : shortDate(s.date)}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="care-region-strip">
-                    <Activity size={18} />
-                    <div>
-                      <strong>{region.name}</strong>
-                      <span>
-                        {selected === "left-hamstring"
-                          ? "Selected focus · drag the body to explore"
-                          : region.note}
-                      </span>
-                    </div>
-                    <label>
-                      <span className="sr-only">Select body region</span>
-                      <select
-                        aria-label="Select body region"
-                        value={selected}
-                        onChange={(e) =>
-                          setSelected(e.target.value as RegionId)
-                        }
-                      >
-                        {regions.map((r) => (
-                          <option key={r.id} value={r.id}>
-                            {r.name}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                  </div>
+                  <BodyRecord embedded />
                 </section>
               </section>
               <div className="care-summary-row">
@@ -1161,9 +1040,9 @@ export default function App() {
                       </span>
                       <button
                         className="care-secondary"
-                        onClick={() => setPanel("update")}
+                        onClick={() => openVoiceNote()}
                       >
-                        <Plus size={15} /> Add a note to your activity
+                        <Plus size={15} /> Add a voice note
                       </button>
                     </div>
                   )}
@@ -1225,16 +1104,6 @@ export default function App() {
                   </span>
                   <p>You, your physio & your companion</p>
                 </div>
-                <button
-                  className="care-secondary"
-                  onClick={() =>
-                    legacyViewsEnabled ? setPanel("voice") : navigate("voice-notes")
-                  }
-                >
-                  <Mic size={15} />
-                  {legacyViewsEnabled ? "Voice inbox" : "Voice notes"}
-                  <ArrowUpRight size={14} />
-                </button>
               </div>
               <section className="care-activity-panel">
                 <div className="care-activity-toolbar">
@@ -1341,6 +1210,16 @@ export default function App() {
           </footer>
         </div>
       </main>
+      {page === "today" && (
+        <button
+          className="care-voice-add"
+          onClick={() => openVoiceNote()}
+          aria-label="Add a voice note"
+          title="Add a voice note"
+        >
+          <Plus size={26} strokeWidth={1.8} />
+        </button>
+      )}
       {toast && (
         <div className="care-toast" role="status">
           <Check size={17} />
@@ -1399,27 +1278,28 @@ export default function App() {
         />
       )}
       {panel === "update" && (
-        <UpdateModal
-          actor={actor}
+        <Modal
+          title={voiceNoteId ? "Voice note" : "Add a voice note"}
+          className="voice-note-modal"
           onClose={() => setPanel(null)}
-          onSave={(entry) => {
-            const ok = commit((latest) => ({
-              ...latest,
-              entries: [entry, ...latest.entries],
-            }));
-            if (ok) {
+        >
+          <VoiceNotes
+            initialNoteId={voiceNoteId}
+            initialToken={voiceToken.current}
+            context={buildVoiceContext(entries, care)}
+            onClose={() => setPanel(null)}
+            onNotesChanged={receiveVoiceNotes}
+            onSaved={() => {
               setPanel(null);
               setFilter("all");
               setStatusFilter("all");
               setSearch("");
               navigate("activity");
-              setToast(
-                "Your update has been added to the shared activity log.",
-              );
-            }
-            return ok;
-          }}
-        />
+              void refreshVoice();
+              setToast("Voice note added to your activity.");
+            }}
+          />
+        </Modal>
       )}
       {legacyViewsEnabled && panel === "voice" && (
         <Modal title="Your voice notes" wide onClose={() => setPanel(null)}>
@@ -1441,8 +1321,8 @@ export default function App() {
           onClose={() => setPanel(null)}
         >
           <p>
-            Four spaces bring together your daily exercises, progress, shared
-            activity and voice notes. Drag the 3D body, explore dated snapshots,
+            Your workspace brings together daily exercises, progress and shared
+            activity. Drag the 3D body, explore dated snapshots,
             or add a note to any activity.
           </p>
           <div className="care-detail-note">
@@ -1459,11 +1339,12 @@ export default function App() {
               roles, with browser-local notes and completion. They do not
               provide authentication or cross-device sharing.
             </p>
-            <strong>Voice notes on your body record</strong>
+            <strong>Voice notes from Today</strong>
             <p>
-              Upload a voice note on the Voice notes page to transcribe it and
-              explore body-region observations on the 3D musculature. Review
-              the source excerpts and confirm or correct each location.
+              In Today, choose Add a voice note or the floating plus button.
+              Record or upload audio, listen back, then add it to your activity.
+              In Activity, reopen a saved voice note to read its transcript,
+              or choose Download my record to save your movement record.
             </p>
           </div>
           <button className="care-primary full" onClick={exportRecord}>
@@ -1483,6 +1364,8 @@ function ActivityCard({
   actor,
   onDone,
   onNote,
+  onOpenVoice,
+  voiceAnalysis,
   compact,
 }: {
   entry: ActivityEntry;
@@ -1492,6 +1375,8 @@ function ActivityCard({
   actor: Human;
   onDone: () => void;
   onNote: (text: string) => boolean;
+  onOpenVoice?: () => void;
+  voiceAnalysis?: VoiceAnalysisData | null;
   compact: boolean;
 }) {
   const [adding, setAdding] = useState(false);
@@ -1554,6 +1439,7 @@ function ActivityCard({
             onDiscuss={() => setAdding(true)}
           />
         )}
+        {voiceAnalysis && <VoiceAnalysis analysis={voiceAnalysis} showSummary={false} />}
         {notes.length > 0 && (
           <div className="care-entry-notes">
             {notes.map((n) => (
@@ -1574,6 +1460,11 @@ function ActivityCard({
           </div>
         )}
         <div className="care-entry-actions">
+          {onOpenVoice && (
+            <button onClick={onOpenVoice}>
+              <Mic size={14} /> View voice note
+            </button>
+          )}
           <button
             className={done ? "is-done" : ""}
             aria-pressed={done}
@@ -1623,106 +1514,6 @@ function ActivityCard({
         )}
       </div>
     </article>
-  );
-}
-function UpdateModal({
-  actor,
-  onClose,
-  onSave,
-}: {
-  actor: Human;
-  onClose: () => void;
-  onSave: (entry: ActivityEntry) => boolean;
-}) {
-  const [title, setTitle] = useState("");
-  const [body, setBody] = useState("");
-  const [kind, setKind] = useState<"check-in" | "appointment" | "plan">(
-    "check-in",
-  );
-  const [region, setRegion] = useState("");
-  const [error, setError] = useState("");
-  return (
-    <Modal title="Add to your care record" onClose={onClose}>
-      <form
-        className="care-update-form"
-        onSubmit={(e) => {
-          e.preventDefault();
-          if (
-            !onSave({
-              id: crypto.randomUUID(),
-              date: new Date().toISOString(),
-              actor,
-              title: title.trim(),
-              body: body.trim(),
-              kind,
-              ...(region ? { region: region as RegionId } : {}),
-              source: "local",
-            })
-          )
-            setError(
-              "Your update could not be saved. Your text is still here; check browser storage and try again.",
-            );
-        }}
-      >
-        <p>
-          Adding as <strong>{actorNames[actor]}</strong> · saved on this device
-        </p>
-        <label>
-          Type
-          <select
-            value={kind}
-            onChange={(e) => setKind(e.target.value as typeof kind)}
-          >
-            <option value="check-in">Check-in</option>
-            <option value="appointment">Appointment note</option>
-            <option value="plan">Plan update</option>
-          </select>
-        </label>
-        <label>
-          Title
-          <input
-            required
-            maxLength={100}
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="What would you like to share?"
-          />
-        </label>
-        <label>
-          Your update
-          <textarea
-            required
-            maxLength={4000}
-            rows={5}
-            value={body}
-            onChange={(e) => setBody(e.target.value)}
-            placeholder="A small change, a question, or a note for your next appointment…"
-          />
-        </label>
-        <label>
-          Body region <span>(optional)</span>
-          <select value={region} onChange={(e) => setRegion(e.target.value)}>
-            <option value="">General update</option>
-            {regions.map((r) => (
-              <option key={r.id} value={r.id}>
-                {r.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        {error && (
-          <p className="care-form-error" role="alert">
-            {error}
-          </p>
-        )}
-        <button
-          className="care-primary full"
-          disabled={!title.trim() || !body.trim()}
-        >
-          Add update <Plus size={16} />
-        </button>
-      </form>
-    </Modal>
   );
 }
 function SessionModal({
