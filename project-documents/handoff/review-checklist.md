@@ -12,11 +12,11 @@ Status: Ready for interrogation
 - Resolve at least two broad regions without assuming joint tests identify specific muscles.
 - Prove real microphone → transcript → sourced proposal → confirmation → body focus.
 - Verify the chosen transcription response before relying on time alignment.
-- Pin a compatible Next/React/Three/CopilotKit package set and model configuration.
+- Pin a compatible Vite/React/Three package set and, if adopted, CopilotKit and model configuration.
 - Verify event/revision deduplication, stale-response handling and local storage errors.
 
 ## Decisions to challenge with evidence
-The chosen framework is Next.js, but a failed time-boxed integration should produce a concrete alternative and tradeoff. Viewer reuse is preferred; upstream tooling alone is not proof. Exact package versions and region IDs remain open engineering choices.
+The chosen base is Kingsley's Vite app and Node backend under ADR-006; no framework migration is planned. Viewer reuse is preferred; upstream tooling alone is not proof. Exact package versions and region IDs remain open engineering choices.
 
 ## Deliver back
 1. Confirmed assumptions and evidence.

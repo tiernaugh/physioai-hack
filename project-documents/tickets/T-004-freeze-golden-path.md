@@ -1,12 +1,15 @@
 # T-004 — Freeze the golden path
 
-- **Status:** Proposed
+- **Status:** Dropped
 - **Priority:** P0
 - **Owner:** Unassigned
 - **Estimate:** 20 minutes
 - **Depends on:** T-002, T-003
 - **Blocks:** Implementation tickets
 - **Concept links:** [`../concept/03-agent-workflow.md`](../concept/03-agent-workflow.md), [`../concept/05-technical-architecture.md`](../concept/05-technical-architecture.md), [`../concept/06-scope-and-requirements.md`](../concept/06-scope-and-requirements.md), [`../concept/08-demo-story.md`](../concept/08-demo-story.md)
+
+## Superseded planning gate
+Superseded by T-005 through T-012 under the UI-first Vite plan. Requirements carry forward; unchecked validation is not claimed complete. Retained below for historical context.
 
 ## Outcome
 

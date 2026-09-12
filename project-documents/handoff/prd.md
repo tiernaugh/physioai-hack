@@ -1,5 +1,5 @@
 # PRD — Explorable Body Record
-Version: 1.0
+Version: 1.1
 Status: Accepted scope; implementation verification pending
 Date: 2026-09-12
 
@@ -16,6 +16,9 @@ Sources: [user research](../07-user-research.md), [latest team discussion](../tr
 
 ## Core journey
 Open prepared client record → coach starts recording → speaks about findings, optionally selecting regions → Finish → transcription/extraction → coach reviews and confirms proposals → client sees updates, explores sources and saves an observation.
+
+## UI specifications
+Detailed screen/JTBD contract: [experience PRD](prd-experience.md). Expanded view and orientation contract: [viewer PRD](prd-body-viewer.md). Build on Vite/React and the current Node backend per [ADR-006](../adrs/006-build-on-vite-prototype.md).
 
 ## Requirements
 | ID | Requirement | Acceptance evidence |
@@ -34,12 +37,17 @@ Open prepared client record → coach starts recording → speaks about findings
 | PR-12 | Persistence and replay safety | Reload preserves confirmed records; replay duplicates nothing; later distinct sessions remain allowed |
 | PR-13 | Recovery from failure | Failed recording/model/storage operations retain useful draft state and permit retry or labelled fallback |
 | PR-14 | Repeatable demo | Explicit reset restores the fictional fixture without affecting unrelated browser data |
+| PR-15 | Expanded body | Fill app viewport; preserve pose/selection; exit and Escape work |
+| PR-16 | Predictable camera views | Front/Back/Left/Right and two isometric presets; smooth cancellable movement |
+| PR-17 | Useful framing | Fit whole body and Focus selected; manual actions require no model |
+| PR-18 | Body-first screen states | Overview, region detail, capture, review and confirmed record meet the experience PRD |
+| PR-19 (P1) | Recorded history | Earlier snapshot with explicit date and return-to-latest; no interpolation |
 
 ## Interface priorities
 Use Kingsley's calm green/cream visual treatment as inspiration. Give the body most of the workspace. Adjacent details show evidence, session review or selected-region notes. Start session records a consultation; it must not resemble the prototype's workout-start action.
 
 ## Agent behaviour
-Use active assessment, allowed region map, transcript and selection context to propose annotations. Use CopilotKit to expose semantic context and deliberate viewer actions. Do not require a chatbox to navigate ordinary controls.
+Use active assessment, allowed region map, transcript and selection context to propose annotations. Use a validated action bridge to expose semantic context and deliberate viewer actions. CopilotKit is conditional on a short integration check; the real model-to-record workflow is mandatory. Do not require a chatbox to navigate ordinary controls.
 
 The model proposes mappings; deterministic code validates IDs/sources and computes numerical comparisons. Coach confirmation grants permission to publish the current draft. Save client wording exactly; no model rewrite is necessary to persist a note.
 
@@ -54,10 +62,10 @@ Exercise planning/logging, golf technique analysis, body or recovery scores, tis
 
 Recovery and performance are contextual stories, not additional implemented flows.
 
-These exclusions apply to delivery of the consultation P0. Existing prototype recovery/routine features, the assessment story, optional WhatsApp integration and golf mockup source are retained in the combined repository; their presence does not satisfy or expand PR-01 through PR-14. See [combined implementation status](integration-status.md).
+These exclusions apply to delivery of the consultation P0. Existing prototype recovery/routine features, the assessment story, optional WhatsApp integration and golf mockup source are retained in the combined repository; their presence does not satisfy or expand PR-01 through PR-18. See [combined implementation status](integration-status.md).
 
 ## Definition of done
-PR-01 through PR-14 pass on the selected demo device. Demonstrate one real recording-to-confirmed-update cycle and one client observation surviving reload. Run twice, record actual latency and disclose all seeded elements. A transcript fallback is useful but does not count as proving PR-04.
+PR-01 through PR-18 pass on the selected demo device. Demonstrate one real recording-to-confirmed-update cycle and one client observation surviving reload. Run twice, record actual latency and disclose all seeded elements. A transcript fallback is useful but does not count as proving PR-04.
 
 ## Open product checks
 Can a client find the relevant explanation without instruction? Are source labels understandable? Is review fast enough for a coach? These are questions for rehearsal, not established benefits.

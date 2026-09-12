@@ -7,9 +7,9 @@ Validation: integration spike still required; decisions below are not claims of 
 See [ADRs](../adrs/README.md) for rationale and alternatives, and [technical contracts](../handoff/technical-contracts.md) for proposed implementation interfaces.
 | Layer | Choice | Purpose |
 |---|---|---|
-| Application | Next.js App Router, TypeScript, Node runtime | One application for UI and server-side model endpoints |
-| Viewer | Pinned Human Atlas renderer vendored behind a small adapter | Multi-region selection, focus and layers without rebuilding anatomy |
-| Agent/UI | CopilotKit, one compatible pinned SDK generation | Share semantic context and expose focus/review actions |
+| Application | Existing Vite/React/TypeScript and Node backend | Build on Kingsley's app; no framework migration |
+| Viewer | Extend current Three.js viewer behind an adapter; reuse upstream helpers as needed | Two-region selection, presets, focus and expanded mode |
+| Agent/UI | Validated application action bridge; CopilotKit conditional on quick integration | Share semantic context and expose focus/review actions |
 | Model | OpenAI transcription and structured extraction | Recorded session → transcript → source-backed region proposals |
 | Capture | Browser MediaRecorder plus timed region-selection events | Record in-session; process on Finish |
 | Storage | Versioned localStorage for demo records and notes | Reload persistence without accounts/backend database |
@@ -20,12 +20,12 @@ Human Atlas reference: https://github.com/ashemag/human-atlas
 Next.js client loading: https://nextjs.org/docs/app/guides/lazy-loading
 CopilotKit runtime: https://docs.copilotkit.ai/strands/copilot-runtime
 
-Use browser-only viewer mounting from a client wrapper. Verify current CopilotKit imports/package compatibility before scaffolding; do not mix older proposal examples with newer APIs. Final model identifiers remain configuration choices after access verification.
+The viewer remains browser-rendered in Vite. ADR-006 supersedes the earlier Next.js mounting strategy. Verify current CopilotKit imports/package compatibility before scaffolding; do not mix older proposal examples with newer APIs. Final model identifiers remain configuration choices after access verification.
 
 ## Preserve exploratory work
-Kingsley's Vite prototype remains useful visual reference. Its muscle viewer directly selects the left hamstring, not all required broad regions. Preserve it in git and isolate it before changing the application shell; do not treat its recovery percentages, routine UI or WhatsApp backend as P0 requirements.
+Kingsley's Vite prototype remains useful visual reference. Its muscle viewer directly selects the left hamstring, not all required broad regions. Build on it directly; do not treat its recovery percentages, routine UI or WhatsApp backend as P0 requirements.
 
-Vendor upstream renderer/types/helpers and required model assets at a recorded commit, with MIT code notice and CC BY 4.0 data attribution. Keep vendored code separate from product components. The upstream inspection callback is an integration seam, not proof of our CopilotKit integration.
+If upstream renderer/types/helpers or assets are imported, record their commit, with MIT code notice and CC BY 4.0 data attribution. Keep vendored code separate from product components. The upstream inspection callback is an integration seam, not proof of our CopilotKit integration.
 
 ## Adapter and state
 Product region IDs are stable broad-region identifiers independent of atlas IDs. A hand-authored adapter maps them to one or more anatomical structures and camera targets. The model selects from the product allowlist; it never invents mesh IDs.
@@ -48,7 +48,7 @@ Server-held keys; no raw audio in git or localStorage. Audio exists only for ses
 Handle denied microphone access, unsupported recording formats, missing geometry, malformed model outputs and storage failures explicitly. Prepared transcript fallback preserves the mapping demonstration but is disclosed as fallback.
 
 ## Verification gates
-1. Run vendored viewer in Next and select/focus at least two relevant regions.
+1. Extend the existing viewer and select/focus at least two relevant regions; verify expanded view and presets.
 2. Record and transcribe a short clip on the actual demo device.
 3. Produce supported annotations, review them and trigger one real CopilotKit viewer action.
 4. Confirm updates and client notes survive reload; replayed event does not duplicate them.

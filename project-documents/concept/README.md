@@ -2,7 +2,7 @@
 
 Status: Decided — concept selected 2026-09-12
 
-The locked direction is a client-facing body record with a small coach session mode. Stephen records an explanation, reviews agent-proposed region updates and confirms them; the client explores and adds observations. Next.js, vendored Human Atlas, CopilotKit and OpenAI are selected. Technical feasibility still needs the T-003 spike.
+The locked direction is a client-facing body record with a small coach session mode. Stephen records an explanation, reviews agent-proposed region updates and confirms them; the client explores and adds observations. Vite/React and the existing Node backend are the selected base; viewer expansion and real agent extraction are required. CopilotKit is conditional under ADR-006. Technical feasibility still needs the T-003 spike.
 
 ## Concept file map
 

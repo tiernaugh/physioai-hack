@@ -2,9 +2,11 @@
 Status: Proposed implementation interfaces under the accepted architecture
 Date: 2026-09-12
 
-These are application-owned contracts, not claims about a vendor SDK. Refine them during T-003 and update the document before parallel implementation.
+These are application-owned contracts, not claims about a vendor SDK. Refine them during T-006 and update the document before parallel implementation. The isolated UI prototype uses a smaller two-left-region fixture model; it does not yet implement this full contract.
 
 ## Ownership
+
+Current runtime: Vite frontend and existing Node backend per ADR-006. Endpoint paths below are proposed app contracts to adapt to existing routes, not Next.js route-handler requirements. CopilotKit-specific wiring is conditional; semantic context and validated actions remain required.
 Browser owns recording buffers, selected region, draft review and demo persistence.
 Server owns provider calls and schema validation; credentials never enter browser bundles.
 Viewer adapter owns atlas identifiers and camera targets.

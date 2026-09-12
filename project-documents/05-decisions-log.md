@@ -26,6 +26,14 @@ Record decisions that materially affect product scope, interaction design, archi
 
 ## Current decisions
 
+### 2026-09-12 — UI-first delivery on the existing application
+
+- **Status:** Decided
+- **Decision:** Build on Kingsley's Vite/React and Node implementation. Agree five screen states first, add expanded body and labelled orientation controls, then connect real capture/extraction/review.
+- **Reason:** User explicitly selected reuse under time pressure and requested visual alignment before further work.
+- **Consequences:** ADR-006 supersedes Next.js migration. T-005 through T-013 replace the earlier broad planning gates. Historical snapshot switching is P1; orientation cube is deferred. No application behaviour is claimed implemented by these documents.
+- **Owner:** Team
+
 ### 2026-09-12 — Combine prototype work and consultation handoff
 
 - **Status:** Decided

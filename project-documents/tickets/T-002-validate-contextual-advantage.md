@@ -1,12 +1,15 @@
 # T-002 — Validate the contextual advantage
 
-- **Status:** Ready
+- **Status:** Dropped
 - **Priority:** P0
 - **Owner:** Unassigned
 - **Estimate:** 20 minutes
 - **Depends on:** T-001
 - **Blocks:** T-004
 - **Concept links:** [`../concept/02-users-and-environment.md`](../concept/02-users-and-environment.md), [`../concept/03-agent-workflow.md`](../concept/03-agent-workflow.md), [`../concept/04-positioning.md`](../concept/04-positioning.md)
+
+## Superseded planning gate
+Superseded by T-005 through T-012 under the UI-first Vite plan. Requirements carry forward; unchecked validation is not claimed complete. Retained below for historical context.
 
 ## Outcome
 

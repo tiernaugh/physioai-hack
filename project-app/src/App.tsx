@@ -32,6 +32,7 @@ import {
 import BodyViewer from "./BodyViewer";
 import AssessmentStory from "./AssessmentStory";
 import VoiceInbox from "./VoiceInbox";
+import BodyRecord from "./body-record/BodyRecord";
 import {
   exercises,
   exportProfile,
@@ -43,7 +44,7 @@ import {
   type Session,
 } from "./data";
 
-type Page = "overview" | "assessment" | "routine" | "history" | "profile" | "voice";
+type Page = "overview" | "assessment" | "routine" | "history" | "profile" | "voice" | "body-record";
 type Message = { role: "assistant" | "user"; text: string };
 function Modal({
   title,
@@ -131,6 +132,7 @@ export default function App() {
   const totalSets = exercises.reduce((a, b) => a + b.sets, 0);
   const nav = [
     { id: "overview", label: "Overview", icon: LayoutGrid },
+    { id: "body-record", label: "Body record", icon: Target },
     { id: "assessment", label: "Assessment story", icon: ClipboardList },
     { id: "routine", label: "My routine", icon: Dumbbell },
     { id: "history", label: "Session history", icon: History },
@@ -385,7 +387,7 @@ export default function App() {
           </div>
         </header>
         <div className="page-content">
-          <div className="page-heading">
+          {page !== "body-record" && <div className="page-heading">
             <div>
               <div className="eyebrow">
                 {page === "overview"
@@ -433,6 +435,8 @@ export default function App() {
             </button>}
           </div>
 
+          }
+          {page === "body-record" && <BodyRecord />}
           {page === "voice" && <VoiceInbox />}
           {page === "assessment" && <AssessmentStory />}
           {page === "overview" && (

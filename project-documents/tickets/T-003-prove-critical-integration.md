@@ -1,11 +1,14 @@
 # T-003 — Prove session capture through body annotation
-- **Status:** Ready
+- **Status:** Dropped
 - **Priority:** P0
 - **Owner:** Unassigned
 - **Estimate:** Re-estimate against actual remaining time; viewer transplant time-box 30 minutes
 - **Depends on:** T-001
 - **Blocks:** T-004 completion and final implementation estimates
 - **Concept links:** [Architecture](../concept/05-technical-architecture.md), [workflow](../concept/03-agent-workflow.md)
+
+## Superseded planning gate
+Superseded by T-005 through T-012 under the UI-first Vite plan. Requirements carry forward; unchecked validation is not claimed complete. Retained below for historical context.
 
 ## Outcome
 Executable evidence that the locked stack can turn a short recording into a reviewed, source-backed annotation and focus the corresponding body region.

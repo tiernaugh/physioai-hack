@@ -4,6 +4,8 @@ This directory is the project's shared source of truth.
 
 ## Start here
 
+Latest UI specifications: [screen/JTBD PRD](handoff/prd-experience.md), [expanded body and camera PRD](handoff/prd-body-viewer.md), and [sequenced UI-first work plan](tickets/plan.md). Build on the current Vite app under ADR-006.
+
 For implementation review, start with the [build handoff](handoff/README.md), [PRD](handoff/prd.md) and [ADRs](adrs/README.md).
 
 1. [`01-hackathon-brief.md`](01-hackathon-brief.md) — challenge, judging criteria, constraints, and working principles.
@@ -17,6 +19,7 @@ For implementation review, start with the [build handoff](handoff/README.md), [P
 9. [`tickets/`](tickets/README.md) — executable work items and their sequence.
 10. [`source-material/`](source-material/README.md) — supplied reports and other non-conversational source evidence.
 11. [`transcripts/`](transcripts/README.md) — original source conversations.
+12. [`handoff/`](handoff/next-agent-prototyping.md) — handover notes for whoever picks up the next phase of work.
 
 ## Document status labels
 

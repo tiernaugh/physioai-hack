@@ -1,5 +1,5 @@
 # ADR-001 — Next.js Application
-Status: Accepted
+Status: Superseded by [ADR-006](006-build-on-vite-prototype.md)
 Date: 2026-09-12
 
 ## Context

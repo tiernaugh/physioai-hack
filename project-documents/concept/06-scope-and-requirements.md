@@ -6,7 +6,7 @@ Technical verification remains pending
 Stephen records a short explanation in a client's body record, finishes, reviews agent-proposed regional updates and confirms them. The client explores the updated body and saves an observation in the same place.
 
 ## P0 acceptance criteria
-- [ ] Next.js serves one body-first application with coach session and client exploration modes.
+- [ ] The existing Vite app serves one body-first application with coach session and client exploration modes.
 - [ ] At least two validated body regions can be selected/focused.
 - [ ] Start/stop/discard recording controls and capture agreement are visible.
 - [ ] A real short recording is transcribed after Finish.
