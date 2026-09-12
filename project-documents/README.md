@@ -20,6 +20,7 @@ For implementation review, start with the [build handoff](handoff/README.md), [P
 10. [`source-material/`](source-material/README.md) — supplied reports and other non-conversational source evidence.
 11. [`transcripts/`](transcripts/README.md) — original source conversations.
 12. [`handoff/`](handoff/next-agent-prototyping.md) — handover notes for whoever picks up the next phase of work.
+13. [`08-submission-pack.md`](08-submission-pack.md) — portal submission copy: title, description, README text, shot list, social posts.
 
 ## Document status labels
 
