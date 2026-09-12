@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import { ArrowUpRight, ChevronDown, FileText, Sparkles, Stethoscope } from "lucide-react";
 import AnalysisAnatomy from "./AnalysisAnatomy";
 import type { AgentAnalysis } from "./agent-analysis";
@@ -7,11 +7,11 @@ import "./agent-analysis.css";
 export default function AgentDeepDive({ analysis, compact, onDiscuss }: {
   analysis: AgentAnalysis;
   compact: boolean;
-  onDiscuss: () => void;
+  onDiscuss?: () => void;
 }) {
   const [expanded, setExpanded] = useState(!compact);
   const [active, setActive] = useState(0);
-  const contentId = `analysis-${analysis.id}`;
+  const contentId = useId();
   return (
     <section className="agent-deep-dive" aria-label="Agent deep dive">
       <div className="analysis-heading">
@@ -22,7 +22,8 @@ export default function AgentDeepDive({ analysis, compact, onDiscuss }: {
       </div>
       <div className="analysis-intro">
         <h4>{analysis.takeaway}</h4>
-        <p>{analysis.period} <span>·</span> Authored sample analysis</p>
+        <p>{analysis.period} <span>·</span> {analysis.provenance || "Authored sample analysis"}</p>
+        {analysis.notice && <p className="analysis-notice">{analysis.notice}</p>}
       </div>
       {expanded && <div id={contentId}>
         <div className="analysis-metrics">
@@ -31,23 +32,29 @@ export default function AgentDeepDive({ analysis, compact, onDiscuss }: {
         <figure className="analysis-figure">
           <div className="analysis-figure-heading"><h5>{analysis.anatomyTitle}</h5><span>SELECT A NUMBER TO EXPLORE</span></div>
           <div className="analysis-visual-grid">
-            <AnalysisAnatomy insights={analysis.insights} active={active} onSelect={setActive} caption={analysis.anatomyCaption} />
+            <AnalysisAnatomy insights={analysis.insights} active={active} onSelect={setActive} caption={analysis.anatomyCaption} highlightRegions={analysis.highlightRegions} />
             <div className="analysis-insights" aria-label="Anatomy insights">
               {analysis.insights.map((insight, i) => (
                 <button key={insight.label} aria-pressed={active === i} onClick={() => setActive(i)} className={active === i ? "selected" : ""}>
                   <span className="analysis-insight-number">{i + 1}</span>
-                  <span><small>{insight.label}</small><strong>{insight.title}</strong><span>{insight.detail}</span></span>
+                  <span><small>{insight.label}</small><strong>{insight.title}</strong><span className="analysis-insight-detail">{insight.detail}</span>{insight.sourceLabel && <small>{insight.sourceLabel}</small>}</span>
                 </button>
               ))}
+              {analysis.unplaced?.map((text, i) => <div className="analysis-unplaced" key={i}><strong>Location to clarify</strong><p>{text}</p></div>)}
             </div>
           </div>
-          <figcaption><span><i /> Amber: the routine’s hamstring focus</span><span>Reference anatomy · approximate annotations · not a personal scan</span></figcaption>
+          <figcaption><span><i /> {analysis.anatomyLegend || "Amber: the routine’s hamstring focus"}</span><span>Reference anatomy · approximate annotations · not a personal scan</span></figcaption>
         </figure>
         <div className="analysis-reasoning">
           <div className="analysis-section-label"><Sparkles size={13} /> HOW I’M READING THE RECORD</div>
           {analysis.sections.map((section, i) => (
             <div className="analysis-reasoning-step" key={section.title}>
-              <span>0{i + 1}</span><div><h5>{section.title}</h5><p>{section.body}</p></div>
+              <span>0{i + 1}</span><div><h5>{section.title}</h5><p>{section.body}</p>
+                {section.evidenceIds && <details className="analysis-section-sources"><summary>View supporting notes</summary>
+                  {analysis.evidence.filter(evidence => evidence.id && section.evidenceIds?.includes(evidence.id)).map(evidence =>
+                    <blockquote key={evidence.id}><strong>{evidence.label}</strong><p>{evidence.detail}</p></blockquote>)}
+                </details>}
+              </div>
             </div>
           ))}
         </div>
@@ -55,10 +62,10 @@ export default function AgentDeepDive({ analysis, compact, onDiscuss }: {
         <div className="analysis-review">
           <div className="analysis-section-label"><Stethoscope size={14} /> FOR YOUR CONVERSATION WITH STEPHEN</div>
           <ul>{analysis.questions.map((q) => <li key={q}>{q}</li>)}</ul>
-          <button onClick={onDiscuss}>Add your context or a question <ArrowUpRight size={14} /></button>
+          {onDiscuss && <button onClick={onDiscuss}>Add your context or a question <ArrowUpRight size={14} /></button>}
         </div>
         <details className="analysis-evidence">
-          <summary><FileText size={13} /><span>Evidence behind this review</span><small>{analysis.evidence.length} sources · sample record</small><ChevronDown size={14} /></summary>
+          <summary><FileText size={13} /><span>Evidence behind this review</span><small>{analysis.evidence.length} {analysis.evidence.length === 1 ? 'source' : 'sources'} · {analysis.provenance ? "note evidence" : "sample record"}</small><ChevronDown size={14} /></summary>
           <div>{analysis.evidence.map((e) => <p key={e.label}><strong>{e.label}</strong><span>{e.detail}</span></p>)}</div>
         </details>
       </div>}

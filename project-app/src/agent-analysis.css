@@ -175,3 +175,16 @@
   .analysis-evidence summary small { margin-left: 21px; }
   .analysis-evidence > div { padding: 0 14px 12px; }
 }
+
+.analysis-intro .analysis-notice { margin-top: 12px; padding: 9px 11px; background: #f5f3e8; border-radius: 6px; line-height: 1.7; color: #81764f; }
+.analysis-unplaced { margin: 9px; padding: 13px; background: #f8f5eb; border-left: 2px solid #c8b585; border-radius: 4px; }
+.analysis-unplaced strong { font-size: 11px; color: #81744f; }
+.analysis-unplaced p { font-size: 11px; line-height: 1.7; color: #837b66; margin: 6px 0 0; }
+.analysis-insight-detail { white-space: pre-wrap; overflow-wrap: anywhere; }
+.analysis-section-sources { margin-top: 8px; }
+.analysis-section-sources summary { font-size: 10px; color: #687950; cursor: pointer; }
+.analysis-section-sources blockquote { margin: 12px 0 0; padding-left: 12px; border-left: 2px solid #c9d3b7; }
+.analysis-section-sources blockquote strong { font-size: 10px; color: #687950; font-weight: 550; }
+.analysis-section-sources blockquote p, .analysis-evidence p span { white-space: pre-wrap; overflow-wrap: anywhere; }
+.voice-note-modal:has(.agent-deep-dive) { width: min(960px, calc(100vw - 32px)); }
+.analysis-pin[hidden] { display: none; }

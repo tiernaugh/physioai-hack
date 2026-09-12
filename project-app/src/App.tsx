@@ -27,14 +27,17 @@ import {
   UserRound,
   X,
 } from "lucide-react";
-import BodyRecord from "./body-record/BodyRecord";
+import BodyHealth from "./body-record/BodyHealth";
 import AssessmentStory from "./AssessmentStory";
+import ProgressOverview from "./ProgressOverview";
+import { activityAnchor, buildProgressTimeline } from "./progress-timeline";
+import type { TimelineItem } from "./progress-timeline";
 import VoiceInbox from "./VoiceInbox";
 import VoiceNotes from "./VoiceNotes";
 import type { VoiceNote } from "./VoiceNotes";
 import VoiceAnalysis from './VoiceAnalysis';
 import { buildVoiceContext, voiceActivity, voiceInProgress, voiceAnalysisText } from './voice-analysis';
-import type { VoiceAnalysis as VoiceAnalysisData } from './voice-analysis';
+
 import AgentDeepDive from "./AgentDeepDive";
 import { agentAnalyses, analysisText } from "./agent-analysis";
 import {
@@ -57,13 +60,13 @@ import {
   saveCareStore,
   sessionActivity,
   shortDate,
-  snapshots,
 } from "./care-data";
 import type { ActivityEntry, Actor, CareStore, Human } from "./care-data";
 import "./refresh.css";
 import "./today-hero.css";
+import "./progress.css";
 
-type Page = "today" | "progress" | "activity";
+type Page = "today" | "progress";
 type Panel = "help" | "assessment" | "voice" | "update" | null;
 // Retain the earlier screens for future work, without exposing them in the app.
 const legacyViewsEnabled = false;
@@ -78,13 +81,7 @@ const nav = [
     id: "progress",
     label: "Your progress",
     icon: CalendarDays,
-    caption: "Every step forward",
-  },
-  {
-    id: "activity",
-    label: "Activity",
-    icon: Activity,
-    caption: "One shared conversation",
+    caption: "Progress, calendar & activity",
   },
 ] as const;
 
@@ -143,78 +140,11 @@ function ActorIcon({ actor, size = 17 }: { actor: Actor; size?: number }) {
     <UserRound size={size} />
   );
 }
-function ScoreChart() {
-  const points = snapshots.map((s, i) => ({
-    x: 12 + i * 115.2,
-    y: 15 + (100 - s.score) * 1.6,
-  }));
-  const path = points
-    .map((p, i) =>
-      i === 0
-        ? `M ${p.x} ${p.y}`
-        : `C ${points[i - 1].x + 58} ${points[i - 1].y} ${p.x - 58} ${p.y} ${p.x} ${p.y}`,
-    )
-    .join(" ");
-  return (
-    <div className="score-chart">
-      <div className="chart-axis">
-        <span>100</span>
-        <span>75</span>
-        <span>50</span>
-        <span>25</span>
-      </div>
-      <div className="chart-plot">
-        <svg
-          viewBox="0 0 600 150"
-          role="img"
-          aria-label="Illustrative health score rises from 48 on 20 July to 78 on 12 September"
-          preserveAspectRatio="none"
-        >
-          <defs>
-            <linearGradient id="score-fill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#91b38c" stopOpacity=".28" />
-              <stop offset="100%" stopColor="#91b38c" stopOpacity="0" />
-            </linearGradient>
-          </defs>
-          {[15, 55, 95, 135].map((y) => (
-            <line
-              key={y}
-              x1="0"
-              x2="600"
-              y1={y}
-              y2={y}
-              stroke="#e8ece5"
-              strokeDasharray="4 5"
-            />
-          ))}
-          <path d={`${path} L 588 150 L 12 150 Z`} fill="url(#score-fill)" />
-          <path d={path} fill="none" stroke="#477652" strokeWidth="3" />
-          {points.map((point, i) => (
-            <circle
-              key={i}
-              cx={point.x}
-              cy={point.y}
-              r="4"
-              fill="#fff"
-              stroke="#477652"
-              strokeWidth="2"
-            />
-          ))}
-        </svg>
-        <div className="chart-labels">
-          {snapshots.map((s) => (
-            <span key={s.date}>{shortDate(s.date)}</span>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export default function App() {
   const [page, setPage] = useState<Page>(() => {
     const hash = location.hash.slice(1);
     if (hash === "voice-notes") return "today";
+    if (hash === "activity" || hash === "activity-calendar") return "progress";
     return nav.some((item) => item.id === hash) ? (hash as Page) : "today";
   });
   const [mobileMenu, setMobileMenu] = useState(false);
@@ -240,6 +170,8 @@ export default function App() {
   const [search, setSearch] = useState("");
   const [calendarMonth, setCalendarMonth] = useState(new Date(2026, 8, 1));
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
+  const [focusedEntryId, setFocusedEntryId] = useState<string | null>(null);
+  const [allDates, setAllDates] = useState(() => ["#activity", "#activity-calendar"].includes(location.hash));
   const [voiceNotes, setVoiceNotes] = useState<VoiceNote[]>([]);
   const voiceEntries = voiceActivity(voiceNotes);
   const analysisForEntry = (id: string) => id.startsWith("voice-analysis:") ? voiceNotes.find(note => note.id === id.slice(15))?.analysis : undefined;
@@ -250,6 +182,8 @@ export default function App() {
     ...sessionActivity(sessions),
     ...voiceEntries,
   ].sort((a, b) => Date.parse(b.date) - Date.parse(a.date));
+  const timelineItems = buildProgressTimeline(entries, care.updates);
+  const entryDates = (entry: ActivityEntry) => [entry.date, ...(care.updates[entry.id]?.notes ?? []).map(note => note.date)].map(dayKey);
   const pending = entries.filter(
     (e) => !(care.updates[e.id]?.done ?? e.kind === "exercise"),
   ).length;
@@ -260,13 +194,17 @@ export default function App() {
   const finishedExercises = exercises.filter(
     (e) => todaySets(e.id) >= e.sets,
   ).length;
-  const filtered = entries.filter(
+  const monthKey = `${calendarMonth.getFullYear()}-${String(calendarMonth.getMonth() + 1).padStart(2, "0")}`;
+  const dateEntries = entries.filter(e => selectedDay
+    ? entryDates(e).includes(selectedDay)
+    : allDates || entryDates(e).some(date => date.startsWith(monthKey)));
+  const filtered = dateEntries.filter(
     (e) =>
       (filter === "all" || e.actor === filter) &&
       (statusFilter === "all" ||
         (care.updates[e.id]?.done ?? e.kind === "exercise") ===
           (statusFilter === "done")) &&
-      `${e.title} ${e.body} ${actorNames[e.actor]} ${analysisText(e.id)} ${voiceAnalysisText(analysisForEntry(e.id))}`
+      `${e.title} ${e.body} ${(care.updates[e.id]?.notes ?? []).map(n => n.text).join(" ")} ${actorNames[e.actor]} ${analysisText(e.id)} ${voiceAnalysisText(analysisForEntry(e.id))}`
         .toLowerCase()
         .includes(search.toLowerCase()),
   );
@@ -283,6 +221,10 @@ export default function App() {
         setVoiceNoteId(null);
         setPanel("update");
         history.replaceState(null, "", "#today");
+      } else if (hash === "activity" || hash === "activity-calendar") {
+        setPage("progress");
+        if (hash === "activity") { setSelectedDay(null); setAllDates(true); }
+        requestAnimationFrame(() => document.getElementById("activity-calendar")?.scrollIntoView({ block: "start" }));
       } else if (nav.some((item) => item.id === hash)) {
         setPage(hash as Page);
       }
@@ -313,6 +255,13 @@ export default function App() {
     window.addEventListener("storage", fn);
     return () => window.removeEventListener("storage", fn);
   }, []);
+  useEffect(() => {
+    if (page !== "today" || panel === "update" || voiceWorking || voiceState !== "Voice notes connected") return;
+    const timer = window.setInterval(() => { if (document.visibilityState === "visible") void refreshVoice(); }, 10000);
+    const refresh = () => void refreshVoice();
+    window.addEventListener("focus", refresh);
+    return () => { clearInterval(timer); window.removeEventListener("focus", refresh); };
+  }, [page, panel, voiceWorking, voiceState]);
   function receiveVoiceNotes(notes: VoiceNote[], token = voiceToken.current) {
     voiceToken.current = token;
     const eligible = notes.filter(
@@ -342,11 +291,34 @@ export default function App() {
     setVoiceNoteId(id);
     setPanel("update");
   }
-  function navigate(next: Page) {
-    setPage(next);
-    location.hash = next;
+  function navigate(next: Page | "activity") {
+    setPage(next === "activity" ? "progress" : next);
+    if (next === "activity") { setSelectedDay(null); setAllDates(true); }
+    location.hash = next === "activity" ? "activity-calendar" : next;
     setMobileMenu(false);
-    window.scrollTo({ top: 0 });
+    if (next === "activity") requestAnimationFrame(() => document.getElementById("activity-calendar")?.scrollIntoView({ block: "start" }));
+    else window.scrollTo({ top: 0 });
+  }
+  function selectProgressDay(date: string) {
+    setSelectedDay(date);
+    setFocusedEntryId(null);
+    const [year, month] = date.split("-").map(Number);
+    setCalendarMonth(new Date(year, month - 1, 1));
+    setFilter("all");
+    setStatusFilter("all");
+    setSearch("");
+  }
+  function selectTimelineItem(item: TimelineItem) {
+    selectProgressDay(dayKey(item.date));
+    setFocusedEntryId(item.entryId);
+  }
+  function viewTimelineEntry(item: TimelineItem) {
+    selectTimelineItem(item);
+    requestAnimationFrame(() => {
+      const element = document.getElementById(activityAnchor(item.entryId));
+      element?.scrollIntoView({ block: "start" });
+      element?.focus({ preventScroll: true });
+    });
   }
   function commit(change: (latest: CareStore) => CareStore) {
     const latest = loadCareStore();
@@ -433,15 +405,11 @@ export default function App() {
         onNote={(text) => updateEntry(entry, text)}
         onOpenVoice={entry.id.startsWith("voice:") ? () => openVoiceNote(entry.id.slice(6))
           : entry.id.startsWith("voice-analysis:") ? () => openVoiceNote(entry.id.slice(15)) : undefined}
-        voiceAnalysis={analysisForEntry(entry.id)}
+        voiceNote={entry.id.startsWith("voice-analysis:") ? voiceNotes.find(note => note.id === entry.id.slice(15)) : undefined}
         compact={compact}
       />
     );
   }
-  const appointmentEntries = entries.filter((e) => e.kind === "appointment");
-  const calendarEntries = selectedDay
-    ? entries.filter((e) => dayKey(e.date) === selectedDay)
-    : appointmentEntries;
   const appointmentSelected = selectedDay === dayKey(nextAppointment.date);
   const daysOffset =
     (new Date(
@@ -491,7 +459,7 @@ export default function App() {
                 <strong>{label}</strong>
                 <small>{caption}</small>
               </span>
-              {id === "activity" && <b>{pending}</b>}
+              {id === "progress" && pending > 0 && <b aria-label={`${pending} open activities`}>{pending}</b>}
             </button>
           ))}
         </nav>
@@ -600,7 +568,7 @@ export default function App() {
                 {page === "today"
                   ? "Welcome back, Alex. Here’s where you are and what’s next."
                   : page === "progress"
-                    ? "Your progress, appointments and the notes that connect them."
+                    ? "Your strength, your activity and the moments that connect them."
                     : "Every check-in, physio update and agent insight. Nothing lost along the way."}
               </p>
             </div>
@@ -704,7 +672,7 @@ export default function App() {
                   <button
                     className="care-vital-link"
                     onClick={() => {
-                      setSelectedDay("2026-09-17");
+                      selectProgressDay("2026-09-17");
                       navigate("progress");
                     }}
                   >
@@ -738,14 +706,18 @@ export default function App() {
                       </li>
                     ))}
                   </ul>
-                  <small className="care-comparison-foot">Percentile within your age group · Updated 12 Sep</small>
+                  <small className="care-comparison-foot">Example percentiles · sample data</small>
+                  <details className="care-comparison-info">
+                    <summary><CircleHelp size={14} /> About this comparison</summary>
+                    <p>These are illustrative scores and rankings. Alex’s age is not recorded and no age-matched population benchmark is connected. Saved notes do not calculate these values.</p>
+                  </details>
                 </section>
               </div>
               <section
                 className="care-body-card care-hero-body"
                 aria-label="Your body today"
               >
-                <BodyRecord embedded />
+                <BodyHealth entries={entries} updates={care.updates} voiceNotes={voiceNotes} voiceState={voiceState} onRefresh={() => void refreshVoice()} onOpenVoice={openVoiceNote} onViewEntry={item => { navigate("progress"); viewTimelineEntry(item); }} />
               </section>
               <div className="care-today-grid care-today-followup">
                 <div className="care-right-column">
@@ -851,21 +823,12 @@ export default function App() {
 
           {page === "progress" && (
             <>
-              <section className="care-progress-overview">
-                <div>
-                  <span className="care-kicker">PROGRESS OVER TIME</span>
-                  <h2>Small steps. A clearer picture.</h2>
-                  <div className="care-progress-number">
-                    78 <span>/100</span>
-                    <b>
-                      <TrendingUp size={14} /> +30 from baseline
-                    </b>
-                  </div>
-                  <p>Illustrative health score · 20 July – 12 September</p>
-                </div>
-                <ScoreChart />
-              </section>
-              <div className="care-progress-grid">
+              <ProgressOverview items={timelineItems} selectedDay={selectedDay} onSelectItem={selectTimelineItem} onSelectDay={selectProgressDay} onViewEntry={viewTimelineEntry} onOpenVoice={openVoiceNote} voiceState={voiceState} onRefreshVoice={() => void refreshVoice()} />
+              <div className="journey-section-heading" id="activity-calendar">
+                <div><span className="care-kicker">EVERY CHECK-IN, CONNECTED</span><h2>Your activity & calendar</h2><p>Appointments, exercise sessions and notes, together by date.</p></div>
+                <span className="care-tag">{entries.length} updates · {pending} open</span>
+              </div>
+              <div className="care-progress-grid journey-activity-grid">
                 <section className="care-calendar-card">
                   <div className="care-card-heading">
                     <h2>
@@ -886,6 +849,7 @@ export default function App() {
                             ),
                           );
                           setSelectedDay(null);
+                          setAllDates(false);
                         }}
                       >
                         <ChevronLeft size={18} />
@@ -901,6 +865,7 @@ export default function App() {
                             ),
                           );
                           setSelectedDay(null);
+                          setAllDates(false);
                         }}
                       >
                         <ChevronRight size={18} />
@@ -919,7 +884,7 @@ export default function App() {
                     {Array.from({ length: daysInMonth }, (_, i) => {
                       const key = `${calendarMonth.getFullYear()}-${String(calendarMonth.getMonth() + 1).padStart(2, "0")}-${String(i + 1).padStart(2, "0")}`;
                       const events = entries.filter(
-                        (e) => dayKey(e.date) === key,
+                        (e) => entryDates(e).includes(key),
                       );
                       const appt =
                         key === dayKey(nextAppointment.date) ||
@@ -931,7 +896,7 @@ export default function App() {
                           aria-label={`${shortDate(key)}, ${events.length} updates${appt ? ", appointment" : ""}`}
                           aria-pressed={selectedDay === key}
                           onClick={() =>
-                            setSelectedDay(selectedDay === key ? null : key)
+                            selectedDay === key ? setSelectedDay(null) : selectProgressDay(key)
                           }
                         >
                           {i + 1}
@@ -966,6 +931,7 @@ export default function App() {
                     onClick={() => {
                       setCalendarMonth(new Date(2026, 8, 1));
                       setSelectedDay(null);
+                          setAllDates(false);
                     }}
                   >
                     Back to this month
@@ -984,117 +950,18 @@ export default function App() {
                     </div>
                     <button
                       onClick={() => {
-                        setSelectedDay("2026-09-17");
-                        setCalendarMonth(new Date(2026, 8, 1));
+                        selectProgressDay("2026-09-17");
                       }}
                     >
                       View appointment <ArrowRight size={14} />
                     </button>
                   </div>
                 </section>
-                <section className="care-appointment-panel">
-                  <div className="care-card-heading">
-                    <div>
-                      <span className="care-kicker">
-                        YOUR JOURNEY, REMEMBERED
-                      </span>
-                      <h2>
-                        {selectedDay
-                          ? shortDate(selectedDay, true)
-                          : "Appointment notes"}
-                      </h2>
-                    </div>
-                    {selectedDay ? (
-                      <button
-                        className="care-text-button"
-                        onClick={() => setSelectedDay(null)}
-                      >
-                        All appointments <X size={13} />
-                      </button>
-                    ) : (
-                      <span className="care-tag">
-                        {appointmentEntries.length} appointments
-                      </span>
-                    )}
-                  </div>
-                  {appointmentSelected && (
-                    <div className="care-upcoming-detail">
-                      <span className="care-status-pill">Upcoming</span>
-                      <h3>{nextAppointment.title}</h3>
-                      <p>17 September · 10:00–10:30 am</p>
-                      <p>{nextAppointment.description}</p>
-                      <span>
-                        Bring your exercise notes and any questions you’d like
-                        to discuss.
-                      </span>
-                      <button
-                        className="care-secondary"
-                        onClick={() => openVoiceNote()}
-                      >
-                        <Plus size={15} /> Add a voice note
-                      </button>
-                    </div>
-                  )}
-                  {calendarEntries.length
-                    ? calendarEntries.map((e) => activityCard(e, true))
-                    : !appointmentSelected && (
-                        <div className="care-empty">
-                          <CalendarDays size={27} />
-                          <h3>A little breathing room.</h3>
-                          <p>No recorded activity on this date.</p>
-                          <button
-                            className="care-text-button"
-                            onClick={() => setSelectedDay(null)}
-                          >
-                            Show appointment notes
-                          </button>
-                        </div>
-                      )}
-                  {legacyViewsEnabled && (
-                    <button
-                      className="care-assessment-link"
-                      onClick={() => setPanel("assessment")}
-                    >
-                      <span className="care-round-icon">
-                        <ListFilter size={18} />
-                      </span>
-                      <span>
-                        <strong>Explore the strength assessment</strong>
-                        <small>
-                          Separate de-identified report · measurements & 3D
-                          anatomy
-                        </small>
-                      </span>
-                      <ArrowUpRight size={18} />
-                    </button>
-                  )}
-                </section>
-              </div>
-            </>
-          )}
-
-          {page === "activity" && (
-            <>
-              <div className="care-activity-summary">
-                <div>
-                  <span className="care-round-icon">
-                    <Activity size={20} />
-                  </span>
-                  <span>
-                    <strong>{entries.length}</strong> updates in your care
-                    record
-                  </span>
+              <section className="care-activity-panel" aria-label="Calendar activity">
+                <div className="journey-feed-heading">
+                  <div><span className="care-kicker">YOUR ACTIVITY</span><h2>{selectedDay ? shortDate(selectedDay, true) : allDates ? "Your whole journey" : calendarMonth.toLocaleDateString("en-IE", { month: "long", year: "numeric" })}</h2></div>
+                  {(selectedDay || !allDates) && <button className="care-text-button" onClick={() => { setSelectedDay(null); setAllDates(true); }}>All dates <X size={13} /></button>}
                 </div>
-                <div className="care-people-stack">
-                  <span>AM</span>
-                  <span>ST</span>
-                  <span>
-                    <Sparkles size={15} />
-                  </span>
-                  <p>You, your physio & your companion</p>
-                </div>
-              </div>
-              <section className="care-activity-panel">
                 <div className="care-activity-toolbar">
                   <div
                     className="care-filter-tabs"
@@ -1117,8 +984,8 @@ export default function App() {
                               : "Agent"}
                         <span>
                           {f === "all"
-                            ? entries.length
-                            : entries.filter((e) => e.actor === f).length}
+                            ? dateEntries.length
+                            : dateEntries.filter((e) => e.actor === f).length}
                         </span>
                       </button>
                     ))}
@@ -1148,9 +1015,16 @@ export default function App() {
                   </label>
                   <span>{filtered.length} updates · newest first</span>
                 </div>
-                <div className="care-feed">
+                <div className="care-feed" aria-live="polite">
+                  {appointmentSelected && <div className="care-upcoming-detail">
+                    <span className="care-status-pill">Upcoming appointment</span>
+                    <h3>{nextAppointment.title}</h3>
+                    <p>17 September · 10:00–10:30 am</p><p>{nextAppointment.description}</p>
+                    <span>Bring your exercise notes and any questions you’d like to discuss.</span>
+                    <button className="care-secondary" onClick={() => openVoiceNote()}><Mic size={15} /> Add a voice note</button>
+                  </div>}
                   {filtered.map((e, i) => (
-                    <div key={e.id}>
+                    <div key={e.id} id={activityAnchor(e.id)} tabIndex={-1} className={focusedEntryId === e.id ? "journey-entry-selected" : undefined}>
                       {(!i ||
                         dayKey(filtered[i - 1].date) !== dayKey(e.date)) && (
                         <div className="care-feed-date">
@@ -1161,23 +1035,24 @@ export default function App() {
                           <i />
                         </div>
                       )}
-                      {activityCard(e)}
+                      {activityCard(e, true)}
                     </div>
                   ))}
-                  {filtered.length === 0 && (
+                  {filtered.length === 0 && !appointmentSelected && (
                     <div className="care-empty">
                       <Search size={28} />
                       <h3>No updates found</h3>
-                      <p>Try another search or choose a different filter.</p>
+                      <p>{dateEntries.length ? "Try another search or choose a different filter." : "No recorded activity for this date. Choose another day or browse all dates."}</p>
                       <button
                         className="care-text-button"
                         onClick={() => {
                           setFilter("all");
                           setStatusFilter("all");
                           setSearch("");
+                          if (!dateEntries.length) { setSelectedDay(null); setAllDates(true); }
                         }}
                       >
-                        Clear filters
+                        {dateEntries.length ? "Clear filters" : "Show all activity"}
                       </button>
                     </div>
                   )}
@@ -1189,6 +1064,7 @@ export default function App() {
                   </span>
                 </div>
               </section>
+              </div>
             </>
           )}
           <footer className="care-footer">
@@ -1317,7 +1193,7 @@ export default function App() {
           <div className="care-detail-note">
             <strong>About the demo</strong>
             <p>
-              Alex’s profile, health scores, age-group comparison, appointments and agent insights are
+              Alex’s profile, health and strength scores, age-group comparison, appointments and agent insights are
               fictional examples. The anatomy is a reference muscle atlas, not a
               personal scan. The health score is illustrative and does not
               measure tissue healing.
@@ -1332,7 +1208,7 @@ export default function App() {
             <p>
               In Today, choose Add a voice note or the floating plus button.
               Record or upload audio, listen back, then add it to your activity.
-              In Activity, reopen a saved voice note to read its transcript,
+              In Your progress activity, reopen a saved voice note to read its transcript,
               or choose Download my record to save your movement record.
             </p>
           </div>
@@ -1354,7 +1230,7 @@ function ActivityCard({
   onDone,
   onNote,
   onOpenVoice,
-  voiceAnalysis,
+  voiceNote,
   compact,
 }: {
   entry: ActivityEntry;
@@ -1365,7 +1241,7 @@ function ActivityCard({
   onDone: () => void;
   onNote: (text: string) => boolean;
   onOpenVoice?: () => void;
-  voiceAnalysis?: VoiceAnalysisData | null;
+  voiceNote?: VoiceNote;
   compact: boolean;
 }) {
   const [adding, setAdding] = useState(false);
@@ -1428,7 +1304,7 @@ function ActivityCard({
             onDiscuss={() => setAdding(true)}
           />
         )}
-        {voiceAnalysis && <VoiceAnalysis analysis={voiceAnalysis} showSummary={false} />}
+        {voiceNote?.analysisStatus === "completed" && voiceNote.analysis && <VoiceAnalysis note={voiceNote} compact={compact} onDiscuss={() => setAdding(true)} />}
         {notes.length > 0 && (
           <div className="care-entry-notes">
             {notes.map((n) => (

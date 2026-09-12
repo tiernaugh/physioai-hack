@@ -1,3 +1,5 @@
+import { locateAnalysisAreas } from './analysis-anatomy.ts';
+import type { AgentAnalysis } from './agent-analysis';
 import type { ActivityEntry, CareStore } from './care-data';
 
 export type VoiceContextSource = {
@@ -73,4 +75,41 @@ export function voiceActivity(notes: VoiceNote[]): ActivityEntry[] {
     });
     return entries;
   });
+}
+
+
+export function voiceDeepDive(note: VoiceNote): AgentAnalysis | null {
+  const analysis = note.analysis;
+  if (!analysis) return null;
+  const { areas, unplaced } = locateAnalysisAreas(note.transcript || '');
+  const sample = analysis.sources.some(source => source.source === 'sample');
+  const date = (value: string) => new Date(value).toLocaleDateString('en-IE', { day: 'numeric', month: 'short', year: 'numeric' });
+  return {
+    id: `voice-${note.id}`,
+    kicker: 'VOICE NOTE REVIEW', takeaway: 'Your update, connected to your record.',
+    period: date(note.receivedAt), provenance: `OpenAI analysis · ${analysis.model} · for review`,
+    notice: sample ? 'Includes fictional sample notes. Comparisons with sample history are demo context, not verified personal history.' : undefined,
+    metrics: [
+      { value: String(areas.length), label: 'Areas located', detail: areas.length ? 'Explicitly named in this note' : 'No clear location in this note' },
+      { value: String(analysis.sources.length), label: 'Earlier notes considered', detail: analysis.contextLimited ? 'Limited recent context' : 'Context saved with this review' },
+      { value: String(analysis.questions.length), label: 'Questions to review', detail: 'For your next conversation' },
+    ],
+    anatomyTitle: 'Where your note connects',
+    anatomyCaption: areas.length ? areas.map(area => area.label).join(', ') : 'No clear body area specified',
+    anatomyLegend: areas.length ? 'Amber: areas mentioned in this note' : 'No area highlighted · location unclear',
+    highlightRegions: areas.map(area => area.region),
+    insights: areas.map(area => ({ label: area.label, title: 'In your own words',
+      detail: area.quote, region: area.region, sourceLabel: 'Current voice note · exact transcript excerpt' })),
+    unplaced: unplaced.length ? unplaced : areas.length ? [] : ['This note does not name a supported body area and side. No location has been assumed.'],
+    sections: [{ title: 'What you reported', body: analysis.summary, evidenceIds: [`voice:${note.id}`] },
+      ...analysis.comparisons.map((comparison, index) => ({ title: `Connection with earlier notes · ${index + 1}`,
+        body: comparison.observation, evidenceIds: comparison.sourceIds }))],
+    uncertainty: [...analysis.uncertainties, ...(unplaced.length ? ['Some wording does not establish a clear body area or side; it remains unplaced.'] : []),
+      'This is an AI interpretation of reported notes. Your care plan has not changed.'].join(' '),
+    questions: analysis.questions,
+    evidence: [{ id: `voice:${note.id}`, label: `${date(note.receivedAt)} · Current voice note`, detail: note.transcript || 'Transcript unavailable.' },
+      ...analysis.sources.map(source => ({ id: source.id,
+        label: `${date(source.date)} · ${source.title} · ${source.source === 'sample' ? 'Sample context' : source.actor === 'physio' ? 'Physio note' : 'Reported note'}`,
+        detail: source.text }))],
+  };
 }

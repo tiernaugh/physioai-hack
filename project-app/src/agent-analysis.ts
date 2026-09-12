@@ -1,8 +1,12 @@
+import type { AnalysisRegion } from './analysis-anatomy';
+
 export type AnatomyInsight = {
   label: string;
   title: string;
   detail: string;
-  position: [number, number, number];
+  position?: [number, number, number];
+  region?: AnalysisRegion;
+  sourceLabel?: string;
 };
 
 export type AgentAnalysis = {
@@ -10,13 +14,18 @@ export type AgentAnalysis = {
   kicker: string;
   takeaway: string;
   period: string;
+  provenance?: string;
+  notice?: string;
+  highlightRegions?: AnalysisRegion[];
+  anatomyLegend?: string;
+  unplaced?: string[];
   metrics: { value: string; label: string; detail: string }[];
   anatomyTitle: string;
   anatomyCaption: string;
   insights: AnatomyInsight[];
-  sections: { title: string; body: string }[];
+  sections: { title: string; body: string; evidenceIds?: string[] }[];
   questions: string[];
-  evidence: { label: string; detail: string }[];
+  evidence: { id?: string; label: string; detail: string }[];
   uncertainty: string;
 };
 

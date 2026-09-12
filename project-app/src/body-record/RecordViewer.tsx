@@ -6,15 +6,20 @@ import { Move, Rotate3D, Scan, Focus, Plus, Minus } from 'lucide-react';
 import { locations, statusAt, progressMuscles } from './model';
 import type { Region, Status } from './model';
 import { statusLabel } from './ProgressPanel';
+import { analysisMuscleRegion, regionAnchor, regionPosterior } from '../analysis-anatomy';
+import type { AnalysisRegion, Bounds } from '../analysis-anatomy';
 
-type Part = { id: string; positions: number; normals: number; indices: number; vertexCount: number; indexCount: number; bounds: [number[], number[]] };
+export type ViewerRegion = { label: string; ids?: string[]; anchorPart?: string; atlasRegion?: AnalysisRegion; status?: Status | 'reported' };
+const sampleRegions: Record<Region, ViewerRegion> = Object.fromEntries(Object.entries(locations).map(([id, value]) => [id, { ...value, ids: progressMuscles[id as Region].ids }])) as Record<Region, ViewerRegion>;
+const viewerStatusLabel = { ...statusLabel, reported: 'Mentioned in saved notes' };
+
+type Part = { id: string; name: string; positions: number; normals: number; indices: number; vertexCount: number; indexCount: number; bounds: [number[], number[]] };
 type Preset = 'Front' | 'Back' | 'Left' | 'Right' | 'Iso left' | 'Iso right';
-type Api = { preset: (name: Preset) => void; fit: () => void; focus: (region: Region) => void; zoom: (factor: number) => void; mode: (pan: boolean) => void };
+type Api = { preset: (name: Preset) => void; fit: () => void; focus: (region: string) => void; zoom: (factor: number) => void; mode: (pan: boolean) => void };
 const directions: Record<Preset, [number, number, number]> = { Front: [0, 0, 1], Back: [0, 0, -1], Left: [1, 0, 0], Right: [-1, 0, 0], 'Iso left': [1, .55, 1], 'Iso right': [-1, .55, 1] };
-const regionList = Object.keys(progressMuscles) as Region[];
 // Vertex colours multiply the material's atlas colour (#c5bdaa): 1 = neutral, >1 washes toward the cream background.
 const NEUTRAL = [1, 1, 1], PALE = [1.32, 1.32, 1.3];
-const tints: Record<Exclude<Status, 'none'>, string> = { improved: '#369467', unchanged: '#d5a443', worsened: '#bc6759' };
+const tints: Record<Exclude<Status, 'none'> | 'reported', string> = { improved: '#369467', unchanged: '#d5a443', worsened: '#bc6759', reported: '#b6975c' };
 const HIGHLIGHT = '#8fa779';
 
 function ViewIcon({ view }: { view: Preset }) {
@@ -30,17 +35,21 @@ function ViewIcon({ view }: { view: Preset }) {
   </svg>;
 }
 
-export default function RecordViewer({ compact = false, selected, onSelect, draftRegions, focusRequest, resetRequest, date, isolate }: { compact?: boolean; date: string; isolate: Region | null; selected: Region | null; onSelect: (region: Region) => void; draftRegions: Region[]; focusRequest: number; resetRequest: number }) {
+export default function RecordViewer<R extends string = Region>({ compact = false, selected, onSelect, draftRegions, focusRequest, resetRequest, date, isolate, recordRegions }: { compact?: boolean; date: string; isolate: R | null; selected: R | null; onSelect: (region: R) => void; draftRegions: R[]; focusRequest: number; resetRequest: number; recordRegions?: Record<R, ViewerRegion> }) {
+  const viewerRegions = recordRegions ?? sampleRegions as unknown as Record<R, ViewerRegion>;
+  const regionList = Object.keys(viewerRegions) as R[];
+  const geometryKey = JSON.stringify(regionList.map(region => [region, viewerRegions[region].ids, viewerRegions[region].anchorPart, viewerRegions[region].atlasRegion]));
+  const regionStatus = (region: R) => recordRegions ? viewerRegions[region].status ?? 'none' : statusAt(region as unknown as Region, date);
   const mount = useRef<HTMLDivElement>(null);
   const api = useRef<Api | null>(null);
-  const current = useRef({ selected, onSelect, draftRegions, date, isolate });
-  current.current = { selected, onSelect, draftRegions, date, isolate };
+  const current = useRef({ selected, onSelect, draftRegions, date, isolate, regionStatus });
+  current.current = { selected, onSelect, draftRegions, date, isolate, regionStatus };
   const [error, setError] = useState('');
   const [ready, setReady] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const [preset, setPreset] = useState<Preset | ''>('Front');
   const [panMode, setPanMode] = useState(false);
-  const markers = useRef<Partial<Record<Region, HTMLButtonElement | null>>>({});
+  const markers = useRef<Partial<Record<R, HTMLButtonElement | null>>>({});
   useEffect(() => { if (selected) api.current?.focus(selected); }, [focusRequest]);
   useEffect(() => { api.current?.fit(); }, [resetRequest]);
   useEffect(() => { api.current?.mode(panMode); }, [panMode, ready]);
@@ -77,7 +86,7 @@ export default function RecordViewer({ compact = false, selected, onSelect, draf
     controls.target.set(0, .88, 0); controls.enablePan = true; controls.screenSpacePanning = true; controls.enableDamping = false;
     controls.mouseButtons.RIGHT = THREE.MOUSE.PAN; controls.touches.TWO = THREE.TOUCH.DOLLY_PAN;
     controls.minDistance = .4; controls.maxDistance = 7;
-    const anchors = new Map<Region, THREE.Vector3>();
+    const anchors = new Map<string, THREE.Vector3>();
     const bodyBounds = new THREE.Box3();
     let tween: { start: number; position: THREE.Vector3; target: THREE.Vector3; endPosition: THREE.Vector3; endTarget: THREE.Vector3 } | null = null;
     const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -101,7 +110,7 @@ export default function RecordViewer({ compact = false, selected, onSelect, draf
         const anchor = anchors.get(region); if (!anchor) return;
         const direction = offset().normalize();
         // The hamstring landmark sits on the posterior side; swing the camera behind the body if it is in front.
-        if (region === 'hamstring' && direction.z > 0) { direction.z = -direction.z; setPreset(''); }
+        if ((region === 'hamstring' || regionPosterior(region as AnalysisRegion)) && direction.z > 0) { direction.z = -direction.z; setPreset(''); }
         move(anchor, direction.multiplyScalar(1.15));
       },
       zoom: factor => move(controls.target, offset().setLength(THREE.MathUtils.clamp(offset().length() * factor, .4, 7))),
@@ -138,7 +147,7 @@ export default function RecordViewer({ compact = false, selected, onSelect, draf
         const owner = new Uint8Array(position.count);
         let vertexOffset = 0;
         for (const part of atlas.parts) {
-          const index = regionList.findIndex(region => progressMuscles[region].ids.includes(part.id));
+          const index = regionList.findIndex(region => (viewerRegions[region].ids?.includes(part.id) || (viewerRegions[region].atlasRegion && analysisMuscleRegion(part.name) === viewerRegions[region].atlasRegion)));
           if (index >= 0) owner.fill(index + 1, vertexOffset, vertexOffset + part.vertexCount);
           vertexOffset += part.vertexCount;
         }
@@ -149,10 +158,21 @@ export default function RecordViewer({ compact = false, selected, onSelect, draf
         paletteKey = '';
         geometries.push(geometry); geometry.computeBoundingBox(); bodyBounds.copy(geometry.boundingBox!);
         scene.add(new THREE.Mesh(geometry, material));
-        for (const region of Object.keys(locations) as Region[]) {
-          const part = atlas.parts.find(part => part.id === locations[region].anchorPart);
-          if (!part) throw new Error(`Missing ${region} landmark.`);
-          anchors.set(region, new THREE.Vector3(...part.bounds[0] as [number, number, number]).add(new THREE.Vector3(...part.bounds[1] as [number, number, number])).multiplyScalar(.5));
+        for (const region of regionList) {
+          const config = viewerRegions[region];
+          if (config.atlasRegion) {
+            const parts = atlas.parts.filter(part => analysisMuscleRegion(part.name) === config.atlasRegion);
+            if (!parts.length) throw new Error(`Missing ${region} landmark.`);
+            const bounds = [
+              [0, 1, 2].map(i => Math.min(...parts.map(part => part.bounds[0][i]))),
+              [0, 1, 2].map(i => Math.max(...parts.map(part => part.bounds[1][i]))),
+            ] as Bounds;
+            anchors.set(region, new THREE.Vector3(...regionAnchor(config.atlasRegion, bounds)));
+          } else {
+            const part = atlas.parts.find(part => part.id === config.anchorPart);
+            if (!part) throw new Error(`Missing ${region} landmark.`);
+            anchors.set(region, new THREE.Vector3(...part.bounds[0] as [number, number, number]).add(new THREE.Vector3(...part.bounds[1] as [number, number, number])).multiplyScalar(.5));
+          }
         }
         setReady(true); api.current?.fit();
       } catch (cause) { if (!disposed) setError(cause instanceof Error ? cause.message : 'Unable to load anatomy.'); }
@@ -165,7 +185,7 @@ export default function RecordViewer({ compact = false, selected, onSelect, draf
       // Palette index 0 = untracked meshes, 1.. = regions. Isolation washes everything else toward the background.
       const palette: number[][] = [isolate ? PALE : NEUTRAL];
       for (const region of regionList) {
-        const status = statusAt(region, date);
+        const status = current.current.regionStatus(region);
         if (isolate && isolate !== region) palette.push(PALE);
         else if (status === 'none') palette.push(isolate ? tint.set(HIGHLIGHT).toArray() : NEUTRAL);
         else palette.push(tint.set(tints[status]).toArray());
@@ -186,7 +206,7 @@ export default function RecordViewer({ compact = false, selected, onSelect, draf
         if (t === 1) tween = null;
       }
       if (merged && targetColours && displayColours) {
-        const key = `${current.current.date}|${current.current.isolate ?? ''}`;
+        const key = `${current.current.date}|${current.current.isolate ?? ''}|${regionList.map(current.current.regionStatus).join(',')}`;
         if (key !== paletteKey) { paletteKey = key; retarget(); }
         if (!settled) {
           const output = displayColours.array as Float32Array, rate = reducedMotion() ? 1 : .1;
@@ -202,7 +222,7 @@ export default function RecordViewer({ compact = false, selected, onSelect, draf
       }
       controls.update(); renderer.render(scene, camera);
       for (const [region, anchor] of anchors) {
-        const button = markers.current[region];
+        const button = markers.current[region as R];
         if (!button) continue;
         project.copy(anchor).project(camera);
         button.style.left = `${(project.x + 1) * container.clientWidth / 2}px`;
@@ -212,13 +232,13 @@ export default function RecordViewer({ compact = false, selected, onSelect, draf
     }
     frame = requestAnimationFrame(animate);
     return () => { disposed = true; abort.abort(); cancelAnimationFrame(frame); observer.disconnect(); controls.removeEventListener('start', cancel); controls.dispose(); geometries.forEach(g => g.dispose()); material.dispose(); renderer.domElement.removeEventListener('webglcontextlost', lost); renderer.dispose(); renderer.domElement.remove(); api.current = null; };
-  }, [attempt]);
+  }, [attempt, geometryKey]);
 
   return <div className="br-viewer">
     <div className="br-canvas" ref={mount}>
-      {ready && (Object.keys(locations) as Region[]).map((region, i) => {
-        const status = statusAt(region, date);
-        return <button ref={element => { markers.current[region] = element; }} key={region} className={`br-marker ${status !== 'none' ? status : ''} ${selected === region ? 'selected' : ''} ${draftRegions.includes(region) ? 'draft' : ''} ${isolate && isolate !== region ? 'dimmed' : ''}`} aria-label={`Explore ${locations[region].label}${status !== 'none' ? `, ${statusLabel[status].toLowerCase()}` : ''}`} aria-pressed={selected === region} onClick={() => current.current.onSelect(region)}><span>{i + 1}</span><b>{locations[region].label}{status !== 'none' ? ` · ${statusLabel[status]}` : ''}{draftRegions.includes(region) ? ' · Draft' : ''}</b></button>;
+      {ready && regionList.map((region, i) => {
+        const status = current.current.regionStatus(region);
+        return <button ref={element => { markers.current[region] = element; }} key={region} className={`br-marker ${status !== 'none' ? status : ''} ${selected === region ? 'selected' : ''} ${draftRegions.includes(region) ? 'draft' : ''} ${isolate && isolate !== region ? 'dimmed' : ''}`} aria-label={`Explore ${viewerRegions[region].label}${status !== 'none' ? `, ${viewerStatusLabel[status].toLowerCase()}` : ''}`} aria-pressed={selected === region} onClick={() => current.current.onSelect(region)}><span>{i + 1}</span><b>{viewerRegions[region].label}{status !== 'none' ? ` · ${viewerStatusLabel[status]}` : ''}{draftRegions.includes(region) ? ' · Draft' : ''}</b></button>;
       })}
     </div>
     {!ready && <div className="br-model-status" role={error ? 'alert' : 'status'}>{error || 'Loading reference anatomy…'}{error && <button onClick={() => setAttempt(attempt + 1)}>Retry model</button>}</div>}
@@ -227,6 +247,6 @@ export default function RecordViewer({ compact = false, selected, onSelect, draf
       <div className="br-manipulation" role="group" aria-label="Drag interaction"><button disabled={!ready} aria-label="Rotate body" aria-pressed={!panMode} data-tooltip="Drag to rotate" onClick={() => setPanMode(false)}><Rotate3D size={compact ? 16 : 20}/></button><button disabled={!ready} aria-label="Pan body" aria-pressed={panMode} data-tooltip="Drag to pan" onClick={() => setPanMode(true)}><Move size={compact ? 16 : 20}/></button></div>
       <div className="br-framing"><button disabled={!ready} aria-label="Fit body" data-tooltip="Fit whole body" onClick={() => api.current?.fit()}><Scan size={20}/></button>{!compact && <button disabled={!ready || !selected} aria-label="Focus selected" data-tooltip={!selected ? 'Select a region first' : 'Focus selected region'} onClick={() => selected && api.current?.focus(selected)}><Focus size={20}/></button>}<button disabled={!ready} aria-label="Zoom in" data-tooltip="Zoom in" onClick={() => api.current?.zoom(.8)}><Plus size={18}/></button><button disabled={!ready} aria-label="Zoom out" data-tooltip="Zoom out" onClick={() => api.current?.zoom(1.25)}><Minus size={18}/></button></div>
     </div>
-    <p className="br-attribution">{compact ? `${panMode ? 'Drag to pan' : 'Drag to rotate'} · Two fingers to pan · Open a marker to explore your record` : `${panMode ? 'Drag to pan' : 'Drag to rotate'} · Right-drag or two fingers to pan · Scroll to zoom`}<br/>Reference anatomy · BodyParts3D / DBCLS · CC BY 4.0 · Colours show your reported change, not severity</p>
+    <p className="br-attribution">{compact ? `${panMode ? 'Drag to pan' : 'Drag to rotate'} · Two fingers to pan · Open a marker to explore your record` : `${panMode ? 'Drag to pan' : 'Drag to rotate'} · Right-drag or two fingers to pan · Scroll to zoom`}<br/>Reference anatomy · BodyParts3D / DBCLS · CC BY 4.0 · {recordRegions ? 'Amber marks areas named in saved notes, not severity' : 'Colours show your reported change, not severity'}</p>
   </div>;
 }

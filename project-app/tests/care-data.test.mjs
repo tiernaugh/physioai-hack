@@ -7,6 +7,7 @@ import {
   saveCareStore,
   sessionActivity,
   sampleActivity,
+  dayKey,
 } from "../src/care-data.ts";
 import { seedSessions } from "../src/data.ts";
 let memory;
@@ -104,4 +105,18 @@ test("blocked browser writes throw without claiming that activity was saved", ()
     () => saveCareStore({ version: 1, entries: [], updates: {} }),
     /Quota/,
   );
+});
+test("calendar dates stay on their named day while timestamps use the local day", () => {
+  const original = process.env.TZ;
+  try {
+    process.env.TZ = "America/Los_Angeles";
+    assert.equal(dayKey("2026-08-17"), "2026-08-17");
+    assert.equal(dayKey("2026-08-17T01:00:00Z"), "2026-08-16");
+    process.env.TZ = "Europe/Dublin";
+    assert.equal(dayKey("2026-08-17"), "2026-08-17");
+    assert.equal(dayKey("2026-08-17T23:30:00Z"), "2026-08-18");
+  } finally {
+    if (original === undefined) delete process.env.TZ;
+    else process.env.TZ = original;
+  }
 });

@@ -204,3 +204,35 @@ Record decisions that materially affect product scope, interaction design, archi
 - **Reliability:** Validate output and source IDs, serialize work per patient, deduplicate concurrent jobs, resume interrupted work and preserve successful transcription on model failure. Retry analysis reuses the saved context and transcript. Existing notes are analysed only through an explicit Analyse note action.
 - **Data and authority:** The API key stays in ignored server environment configuration. Audio stays local; transcript and earlier-note context go to OpenAI. Generated analysis is an interpretation for review and makes no clinical approval, routine change or body annotation.
 - **Verification:** 56 tests and production build pass; live OpenAI response verified with synthetic evidence. End-to-end browser verification passed with a synthetic spoken recording, automatic Activity updates, the Agent filter and source review. Live evidence review led to explicit restrictions against transferring scores across body regions or activities.
+
+
+### 2026-09-12 — Integrate progress, calendar and activity
+
+- **Status:** Implemented following Kingsley’s request.
+- **Decision:** Bring Progress and Activity together under Your progress. Pair the calendar with the complete existing activity feed, using one date selection for graph notes and calendar entries. Month navigation filters the month; All dates restores the whole record. Existing Activity links and voice-save navigation open this section.
+- **Graph:** Add an illustrative strength trend alongside the existing health trend and five numbered, source-linked notes. Three authored August entries connect the sparse early demo history. Use elapsed dates on the horizontal axis and an accurate 0–100 vertical scale. A selected note opens its source text and matching activity; dates without a measurement never create a new score.
+- **Boundaries:** Strength scores are labelled demo indices, not force measurements, healing, or results from the supplied report. Existing notes, completion, exercise storage, voice backend and agent reviews remain intact. Agent reviews start collapsed within the narrower combined feed. No external calendar service is connected; calendar means the existing in-app calendar.
+- **Human control:** Preserve attributed comments, completion, source/status filters, voice-note opening and Markdown export. Search includes saved comments. Users can choose any day, month or all dates.
+- **Verification:** Production build and all 61 current tests pass. Desktop/mobile browser checks cover metric and graph-note selection, corresponding calendar/feed records, month navigation, appointments, sessions, empty days, comment controls, search and legacy Activity links; graph labels do not overlap and the page has no horizontal overflow.
+- **Owner:** Team, following Kingsley’s integration direction.
+
+
+### 2026-09-12 — Give note analysis the progress review UI and sourced 3D locations
+
+- **Status:** Implemented following Kingsley's request.
+- **Decision:** Render authored progress/session reviews and generated voice-note reviews through one `AgentDeepDive` component. Use the same visual hierarchy, summary cards, interactive body view, observations, reasoning, uncertainty, review questions and evidence controls.
+- **Anatomy:** Index named locations in the current transcript, preserve exact wording and anchor pins to the packaged atlas. Selecting an observation focuses the region; shared Front/Back/Oblique controls replace the posterior-only camera. Highlighted reference geometry and a locator ring indicate where the note refers, not a diagnosis or severity.
+- **Uncertainty:** Keep unclear sides, corrections and unsupported locations unplaced. Historical note regions and generated prose cannot silently determine the current note's side. Counts replace clinical-looking metrics where measured values do not exist.
+- **Scope:** Applies immediately to stored analyses without model calls. This is analysis display, not publication of coach annotations into the separate body record. Existing AI processing, persistence and clinical authority boundaries remain unchanged.
+- **Verification:** 61 tests and production build pass. Browser checks verify the saved-note view, progress-review layout, hamstring/calf/wrist selection, view changes, evidence and neutral anatomy for unclear locations.
+
+
+### 2026-09-12 — Put every activity and voice note on the merged tracker
+
+- **Status:** Implemented following Kingsley’s explicit correction.
+- **Correction:** Keep Progress and Activity merged. The user intended all notes on the graph; the earlier five-example whitelist was insufficient. No separate Activity navigation is restored.
+- **Decision:** Build graph annotations from all existing activity/session/voice/agent entries and saved comments. Show each as an individually selectable numbered label with its original title or excerpt, grouped in dated author/voice tracks. Stack coincident labels with no record cap. Selecting a label shows its original text and provenance; saved voice notes open directly, and View full activity focuses the exact linked feed record.
+- **Dates:** Calendar/feed filtering never removes graph notes. Include all note dates in the graph domain without inventing score observations. Comments retain their own date and author and make the original entry visible on that calendar date.
+- **Storage:** Existing notes, voice records and analysis stores are unchanged. No backend data is deleted or remapped.
+
+Verification: production build and all 66 current tests pass. Browser review confirms 23 graph labels for all 23 feed entries, including 7 voice notes, with no overlapping labels. Selecting a voice label selects its calendar date, opens its saved-note dialog, and focuses the exact feed entry through View full activity. Automated coverage also checks pending notes/analyses, comments on later dates, records beyond the score range, duplicate imports and 30 coincident voice records.

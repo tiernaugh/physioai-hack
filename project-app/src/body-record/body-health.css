@@ -1,0 +1,28 @@
+.br-health-mode { display: flex; gap: 6px; padding: 12px 18px; border-bottom: 1px solid #e0e6d8; }
+.br-health-mode button { background: transparent; color: #6f7c68; border-radius: 7px; padding: 9px 12px; font-size: 11px; }
+.br-health-mode button[aria-pressed="true"] { background: #e6eddf; color: #304e3e; font-weight: 700; }
+.br-health-mode span { margin-left: 5px; font-variant-numeric: tabular-nums; }
+.br-live .br-workspace-bar h2 { margin: 5px 0 0; }
+.br-live .br-health-connection { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; padding: 0 24px 12px; font-size: 11px; color: #718069; }
+.br-live .br-health-connection button { border: 0; background: transparent; font-size: 11px; padding: 4px; }
+.br-live .br-health-region-list { display: flex; flex-wrap: wrap; gap: 6px; margin: 15px 0; }
+.br-live .br-health-region-list button { font-size: 10px; padding: 7px 9px; }
+.br-live .br-health-region-list button[aria-pressed="true"] { background: #e6eddf; border-color: #839b71; }
+.br-live .br-health-note h3 { margin: 10px 0 5px; }
+.br-live .br-health-note { overflow-wrap: anywhere; }
+.br-live .br-health-note small { display: block; line-height: 1.6; }
+.br-live .br-health-analysis { padding: 12px; margin: 14px 0; border-left: 2px solid #8a9a78; background: #edf1e7; }
+.br-live .br-health-analysis p { margin-bottom: 0; }
+.br-live .br-marker.reported > span { background: #b6975c; }
+.br-live .br-hero-regions { flex-wrap: wrap; }
+.br-live .br-hero-regions small { display: block; margin-top: 4px; font-size: 9px; color: #76826c; }
+.br-live .br-hero-record-summary { max-height: 440px; overflow-y: auto; }
+.br-live .br-hero-record-summary > small { display: block; line-height: 1.6; }
+.br-live .br-scrub-track input[type="range"] { pointer-events: auto; z-index: 2; cursor: ew-resize; }
+.br-scrub-dense .br-scrub-stop span { display: none; }
+.br-scrub-dense .br-scrub-stop.current span { display: block; }
+@media (max-width: 620px) {
+  .br-health-mode { padding: 10px; }
+  .br-live .br-health-connection { padding: 0 14px 10px; font-size: 10px; }
+  .br-live .br-hero-record-summary { max-height: none; }
+}

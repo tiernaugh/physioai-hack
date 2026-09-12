@@ -46,10 +46,12 @@ export const sampleAgeAttributes = [
   { id: "consistency", label: "Consistency", percentile: 85 },
 ] as const;
 
+// Display-only health and strength indices; neither is a measured assessment.
 export const snapshots = [
   {
     date: "2026-07-20",
     score: 48,
+    strength: 38,
     month: 0,
     status: "Starting your recovery",
     discomfort: 6,
@@ -57,6 +59,7 @@ export const snapshots = [
   {
     date: "2026-08-03",
     score: 54,
+    strength: 44,
     month: 1,
     status: "Finding your rhythm",
     discomfort: 5,
@@ -64,6 +67,7 @@ export const snapshots = [
   {
     date: "2026-08-17",
     score: 60,
+    strength: 49,
     month: 2,
     status: "Building consistency",
     discomfort: 4,
@@ -71,6 +75,7 @@ export const snapshots = [
   {
     date: "2026-08-31",
     score: 66,
+    strength: 57,
     month: 3,
     status: "Building capacity",
     discomfort: 3,
@@ -78,6 +83,7 @@ export const snapshots = [
   {
     date: "2026-09-07",
     score: 72,
+    strength: 63,
     month: 3,
     status: "Moving with confidence",
     discomfort: 3,
@@ -85,12 +91,43 @@ export const snapshots = [
   {
     date: demoToday,
     score: 78,
+    strength: 69,
     month: 4,
     status: "Rebuilding strength",
     discomfort: 2,
   },
 ];
 export const sampleActivity: ActivityEntry[] = [
+  {
+    id: "journey-03-aug",
+    date: "2026-08-03T09:00:00",
+    actor: "user",
+    title: "Finding a rhythm",
+    body: "Short walks are becoming part of my day. I’m still taking the stairs slowly and writing down how movement feels afterwards.",
+    kind: "check-in",
+    region: "left-hamstring",
+    source: "sample",
+  },
+  {
+    id: "journey-17-aug",
+    date: "2026-08-17T10:00:00",
+    actor: "physio",
+    title: "A steadier routine",
+    body: "Alex describes a more consistent movement routine. We discussed keeping a record of comfortable walking time and how the hamstring feels the next morning.",
+    kind: "appointment",
+    region: "left-hamstring",
+    source: "sample",
+  },
+  {
+    id: "journey-31-aug",
+    date: "2026-08-31T18:00:00",
+    actor: "user",
+    title: "More confidence on walks",
+    body: "Feeling more confident on my usual walk. There’s still some tightness afterwards, so I want to discuss how to build up at our next review.",
+    kind: "check-in",
+    region: "left-hamstring",
+    source: "sample",
+  },
   {
     id: "agent-12",
     date: "2026-09-12T09:10:00",
@@ -169,6 +206,8 @@ export const nextAppointment = {
 };
 
 export function dayKey(date: string) {
+  // Date-only records already name a calendar day, independent of time zone.
+  if (/^\d{4}-\d{2}-\d{2}$/.test(date)) return date;
   const value = new Date(date);
   return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, "0")}-${String(value.getDate()).padStart(2, "0")}`;
 }

@@ -421,7 +421,7 @@ export default function VoiceNotes({
             </div>
             <p className="studio-transcript">{active.transcript}</p>
           </section>}
-          {active?.analysisStatus === "completed" && active.analysis && <VoiceAnalysis analysis={active.analysis} />}
+          {active?.analysisStatus === "completed" && active.analysis && <VoiceAnalysis note={active} />}
           {active?.analysisStatus === "failed" && <div className="studio-processing failed" role="alert">
             <div><strong>Analysis needs another try.</strong><span>{active.analysisError}</span></div>
             <button className="care-secondary" onClick={() => void retry(true)} disabled={busy}>Retry analysis</button>

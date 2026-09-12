@@ -63,3 +63,8 @@ No Auth0, Trigger.dev, Exa, Ambiguous or WhatsApp integration in P0. Finish-sess
 ## Implemented voice-note context analysis — 2026-09-12
 
 The existing Today voice-note flow now uses local Whisper, then optional server-side OpenAI Responses structured analysis. New notes trigger processing automatically. Earlier patient voice transcripts and a capture-time snapshot of human Activity notes/session reports provide context; generated interpretations and future entries are excluded. Bounded source snapshots and model provenance are retained in the existing backend note store. Activity and the saved-note modal render the analysis, source comparisons, uncertainties and review questions. A failed model call keeps the transcript and allows analysis-only retry. This does not implement the separate coach-session region proposals, body annotations or CopilotKit actions described above. The local parser is not a contextual LLM; full offline reasoning remains unimplemented.
+
+
+## Shared analysis presentation and anatomy — 2026-09-12
+
+Progress/session reviews and generated voice-note reviews share `AgentDeepDive` and `AnalysisAnatomy`. A presentation adapter converts saved note analysis into that contract. It indexes explicit current-transcript locations, attaches exact source wording, and resolves allowlisted body areas to the packaged atlas's reference geometry and bounds. Selection focuses the camera and updates a numbered locator; both review types expose Front/Back/Oblique views. Unknown sides stay unplaced. This display layer introduces no provider call, stored clinical measurement, body-record publication or inferred injury. Existing saved analyses use it immediately.
